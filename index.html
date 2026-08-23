@@ -1,261 +1,156 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ветер ТВ — Онлайн Трансляция</title>
+    <title>Ветер ТВ — Барбоскины Эфир</title>
     <style>
         body {
-            background-color: #111;
-            color: #fff;
-            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #11141a;
+            color: #ffffff;
+            font-family: 'Segoe UI', Roboto, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            margin: 0;
-            padding: 20px;
-        }
-        h1 {
-            color: #00ffcc;
-            margin-bottom: 5px;
-            letter-spacing: 2px;
-        }
-        .company-name {
-            color: #888;
-            font-size: 12px;
-            margin-bottom: 20px;
-            text-transform: uppercase;
-        }
-        .video-container {
-            position: relative;
-            width: 100%;
-            max-width: 800px;
-            padding-bottom: 56.25%;
-            height: 0;
-            background: #000;
-            box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
-            border-radius: 8px;
-            overflow: hidden;
-        }
-        .video-container iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: 0;
-        }
-        .tv-logo {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.6);
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-weight: bold;
-            color: #00ffcc;
-            border: 1px solid #00ffcc;
-            font-size: 14px;
-            z-index: 10;
-            pointer-events: none;
-        }
-        .now-playing {
-            margin-top: 15px;
-            font-size: 18px;
-            color: #00ffcc;
-            font-weight: bold;
-        }
-        .next-playing {
-            margin-top: 5px;
-            font-size: 14px;
-            color: #888;
-        }
-        .start-btn {
-            margin-top: 20px;
-            padding: 12px 30px;
-            font-size: 18px;
-            background-color: #00ffcc;
-            color: #111;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: 0.2s;
-        }
-        .start-btn:hover {
-            background-color: #00cca3;
-        }
-        
-        /* Панель администратора */
-        .admin-panel {
-            display: none;
-            margin-top: 25px;
-            background: #222;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px dashed #00ffcc;
-            max-width: 600px;
-            text-align: center;
-        }
-        .admin-title {
-            color: #ff3366;
-            font-size: 14px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-        }
-        .admin-btn {
-            background: #333;
-            color: #fff;
-            border: 1px solid #555;
-            padding: 8px 12px;
-            margin: 4px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        .admin-btn:hover {
-            background: #ff3366;
-            border-color: #ff3366;
-        }
-        .login-admin-link {
-            margin-top: 20px;
-            color: #333;
-            font-size: 11px;
-            text-decoration: none;
-            cursor: pointer;
         }
 
-        footer {
-            margin-top: 40px;
+        .channel-header {
+            margin-bottom: 25px;
             text-align: center;
-            font-size: 12px;
-            color: #555;
-            max-width: 600px;
-            line-height: 1.6;
+        }
+
+        .channel-title {
+            font-size: 42px;
+            font-weight: 900;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            background: linear-gradient(45deg, #00d2ff, #3a7bd5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+
+        .channel-subtitle {
+            font-size: 14px;
+            color: #6c7a9c;
+            margin-top: 6px;
+        }
+
+        .player-wrapper {
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 3px solid #232936;
+            background: #000;
+            line-height: 0;
+            width: 800px;
+            height: 450px;
+            margin-bottom: 20px;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            background: #232936;
+            color: #fff;
+            border: 2px solid #3a7bd5;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: #3a7bd5;
+            box-shadow: 0 0 15px rgba(58, 123, 213, 0.4);
+        }
+
+        .btn-start {
+            border-color: #00d2ff;
+        }
+        .btn-start:hover {
+            background: #00d2ff;
+            color: #11141a;
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.4);
         }
     </style>
 </head>
 <body>
 
-    <h1>ВЕТЕР ТВ</h1>
-    <div class="company-name">ОАО ВЕТЕР / КАНАЛ 230</div>
-
-    <div class="video-container">
-        <div class="tv-logo">ВЕТЕР ТВ</div>
-        <div id="tv-player"></div>
+    <div class="channel-header">
+        <h1 class="channel-title">Ветер ТВ</h1>
+        <div id="tv-subtitle" class="channel-subtitle">Нажмите кнопку ниже, чтобы запустить телеканал</div>
     </div>
 
-    <div class="now-playing" id="current-show">Определение эфира...</div>
-    <div class="next-playing" id="next-show">Следующая передача: ...</div>
-
-    <button class="start-btn" onclick="startBroadcast()">ВКЛЮЧИТЬ ПРЯМОЙ ЭФИР</button>
-
-    <div class="admin-panel" id="admin-box">
-        <div class="admin-title">⚙️ УПРАВЛЕНИЕ ЭФИРОМ ОАО ВЕТЕР</div>
-        <button class="admin-btn" onclick="forcePlay('barboskiny', 'Барбоскины (Админ)')">Барбоскины</button>
-        <button class="admin-btn" onclick="forcePlay('smeshariki', 'Смешарики (Админ)')">Смешарики</button>
-        <button class="admin-btn" onclick="forcePlay('fixiki', 'Фиксики (Админ)')">Фиксики</button>
-        <button class="admin-btn" onclick="forcePlay('prostokvashino', 'Простоквашино (Админ)')">Простоквашино</button>
-        <button class="admin-btn" onclick="forcePlay('tri_kota', 'Три кота (Админ)')">Три кота</button>
-        <button class="admin-btn" onclick="forcePlay('music_block', 'Музыкальный блок (Админ)')">Музыка</button>
-        <button class="admin-btn" onclick="forcePlay('bars', 'ТВ Полосы Профилактики')">ТВ Полосы</button>
-        <button class="admin-btn" style="background:#555;" onclick="resetToAuto()">Вернуть Авто-Резерв</button>
+    <div class="player-wrapper">
+        <iframe 
+            id="main-player"
+            allow="autoplay; encrypted-media" 
+            allowfullscreen>
+        </iframe>
     </div>
 
-    <footer>
-        <p>© 2026 ВЕТЕР ТВ (ОАО ВЕТЕР). Все права защищены. Вещание осуществляется через открытый YouTube API.</p>
-        <div class="login-admin-link" onclick="openAdmin()">Вход в панель управления</div>
-    </footer>
+    <div class="controls">
+        <!-- Главная кнопка старта эфира -->
+        <button class="btn btn-start" onclick="startTv()">▶ Включить Ветер ТВ</button>
+        <!-- Кнопка переключения заставки -->
+        <button class="btn btn-intro" onclick="toggleStream()" style="display: none;">Включить заставку канала</button>
+    </div>
 
     <script>
-        // Безопасное подключение API для HTTPS (GitHub)
-        var tag = document.createElement('script');
-        tag.src = "https://youtube.com";
-        var firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+        const site = 'https://www.' + 'youtube' + '.com/embed/';
+        const cartoonID = 'iVRbH_-Bdvo'; // Барбоскины
+        const introID = '9bZkp7q19f0';   // Заставка
+        
+        let isIntro = false;
+        let isStarted = false;
+        const player = document.getElementById('main-player');
+        const subtitle = document.getElementById('tv-subtitle');
 
-        var player;
-        var currentMediaId = '';
-        var isManualMode = false;
-
-        var mediaArchive = {
-            'barboskiny':     { type: 'playlist', id: 'PL2w8GZscbpxuYd5mN64B98E28Xb5LwRk0' },
-            'smeshariki':     { type: 'playlist', id: 'PL6K9_v7WZv1mZ04V6f3Vf2e3H1oZkX5U_' },
-            'fixiki':         { type: 'video',    id: 'm4v9mY_LkoY' }, 
-            'prostokvashino': { type: 'playlist', id: 'PL-7m6GvS4b5g8bO8KBlk7I_W_k-jS8b2p' },
-            'tri_kota':       { type: 'playlist', id: 'PL67_XmSvvUGoL_8m8mB2K_N6rXU8sA4_w' },
-            'music_block':    { type: 'playlist', id: 'PLMC9KNkIncKvYin_USF1qoJQn68Upw_YK' },
-            'bars':           { type: 'video',    id: 'M_6m5O5F-m8' }
-        };
-
-        function checkSchedule() {
-            if (isManualMode) return null;
-            var now = new Date();
-            var day = now.getDay(); 
-            var hour = now.getHours();
+        // Функция первого включения телевизора
+        function startTv() {
+            player.src = site + cartoonID + '?rel=0'; // Без автоплея, чистое включение по клику
+            subtitle.innerText = "В эфире: Барбоскины (Выпуск 1)";
             
-            var showName = "ТЕХНИЧЕСКИЙ ПЕРЕРЫВ / ТВ ПОЛОСЫ";
-            var nextName = "08:00 — Барбоскины";
-            var mediaKey = "bars"; 
-
-            if (hour >= 8 && hour < 22) {
-                if (day >= 1 && day <= 5) {
-                    if (hour >= 8 && hour < 10) { showName = "Барбоскины"; nextName = "10:00 — Смешарики"; mediaKey = "barboskiny"; }
-                    else if (hour >= 10 && hour < 12) { showName = "Смешарики"; nextName = "12:00 — Фиксики"; mediaKey = "smeshariki"; }
-                    else if (hour >= 12 && hour < 14) { showName = "Фиксики"; nextName = "14:00 — Простоквашино"; mediaKey = "fixiki"; }
-                    else if (hour >= 14 && hour < 16) { showName = "Простоквашино"; nextName = "16:00 — Три кота"; mediaKey = "prostokvashino"; }
-                    else if (hour >= 16 && hour < 17) { showName = "Три кота"; nextName = "17:00 — Музыкальный блок"; mediaKey = "tri_kota"; }
-                    else if (hour >= 17 && hour < 18) { showName = "Музыкальный блок ОАО «Ветер»"; nextName = "18:00 — Барбоскины (Повтор)"; mediaKey = "music_block"; }
-                    else if (hour >= 18 && hour < 19) { showName = "Барбоскины (Повтор)"; nextName = "19:00 — Смешарики"; mediaKey = "barboskiny"; }
-                    else if (hour >= 19 && hour < 20) { showName = "Смешарики (Вечерний блок)"; nextName = "20:00 — Реклама"; mediaKey = "smeshariki"; }
-                    else if (hour >= 20 && hour < 22) { showName = "Фирменные заставки и реклама"; nextName = "22:00 — ТВ Полосы"; mediaKey = "music_block"; }
-                }
-            }
-
-            document.getElementById('current-show').innerText = "В ЭФИРЕ: " + showName;
-            document.getElementById('next-show').innerText = "ДАЛЕЕ: " + nextName;
-            return mediaArchive[mediaKey];
+            // Показываем кнопку заставки и прячем кнопку старта
+            document.querySelector('.btn-intro').style.display = 'inline-block';
+            document.querySelector('.btn-start').style.display = 'none';
+            isStarted = true;
         }
 
-        function onYouTubeIframeAPIReady() {
-            var schedule = checkSchedule();
-            currentMediaId = schedule.id;
+        // Переключение между мультфильмом и заставкой
+        function toggleStream() {
+            if (!isStarted) return;
+            const button = document.querySelector('.btn-intro');
 
-            var playerConfig = {
-                playerVars: { 'autoplay': 0, 'controls': 1, 'rel': 0, 'origin': window.location.origin }
-            };
-
-            if (schedule.type === 'playlist') {
-                playerConfig.playerVars.listType = 'playlist';
-                playerConfig.playerVars.list = schedule.id;
+            if (!isIntro) {
+                player.src = site + introID + '?rel=0';
+                subtitle.innerText = "В эфире: Фирменная заставка Ветер ТВ";
+                button.innerText = "Вернуть мультфильм";
+                isIntro = true;
             } else {
-                playerConfig.videoId = schedule.id;
+                player.src = site + cartoonID + '?rel=0';
+                subtitle.innerText = "В эфире: Барбоскины (Выпуск 1)";
+                button.innerText = "Включить заставку канала";
+                isIntro = false;
             }
-
-            player = new YT.Player('tv-player', playerConfig);
-
-            setInterval(function() {
-                if (isManualMode) return;
-                var currentSchedule = checkSchedule();
-                if (currentSchedule.id !== currentMediaId) {
-                    currentMediaId = currentSchedule.id;
-                    if (currentSchedule.type === 'playlist') {
-                        player.loadPlaylist({ list: currentSchedule.id, listType: 'playlist' });
-                    } else {
-                        player.loadVideoById(currentSchedule.id);
-                    }
-                }
-            }, 10000);
         }
+    </script>
 
-        function startBroadcast() {
-            if (player) { player.playVideo(); }
-        }
-
-        function openAdmin() {
-            var password = prompt("Введите пароль доступа:");
-            if (password === "253637") { // Ваш точный пароль подключен
+</body>
+</html>
