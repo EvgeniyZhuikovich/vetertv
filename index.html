@@ -70,23 +70,18 @@
             z-index: 10;
         }
 
-        /* Панель управления */
+        /* Контейнер для кнопок */
         .controls-panel {
             display: flex;
-            align-items: center;
             gap: 15px;
-            background: #1a1f29;
-            padding: 10px 20px;
-            border-radius: 12px;
-            border: 1px solid #232936;
         }
 
         /* Стили кнопок */
         .btn {
             background: #232936;
             color: #fff;
-            padding: 12px 24px;
-            font-size: 15px;
+            padding: 12px 28px;
+            font-size: 16px;
             font-weight: 600;
             border-radius: 8px;
             border: none;
@@ -108,46 +103,6 @@
             background: #3a7bd5;
             box-shadow: 0 0 20px rgba(58, 123, 213, 0.4);
         }
-
-        /* Контейнер регулятора громкости */
-        .volume-slider-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 600;
-            color: #00d2ff;
-            font-size: 14px;
-            margin-left: 5px;
-            user-select: none;
-        }
-
-        /* Стилизация ползунка */
-        .volume-slider {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 100px;
-            height: 6px;
-            border-radius: 3px;
-            background: #232936;
-            outline: none;
-            cursor: pointer;
-        }
-
-        .volume-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: #00d2ff;
-            cursor: pointer;
-            box-shadow: 0 0 10px rgba(0, 210, 255, 0.6);
-            transition: transform 0.1s;
-        }
-
-        .volume-slider::-webkit-slider-thumb:hover {
-            transform: scale(1.2);
-        }
     </style>
 </head>
 <body>
@@ -165,17 +120,12 @@
     <div class="controls-panel">
         <button id="mute-button" class="btn volume-btn" onclick="toggleSound()">🔊 Включить звук</button>
         <button class="btn fullscreen-btn" onclick="toggleFullscreen()">📺 Во весь экран</button>
-        
-        <div class="volume-slider-container">
-            <span>Громкость:</span>
-            <input type="range" id="volume-input" class="volume-slider" min="0" max="10" value="8" oninput="changeVolume(this.value)">
-            <span id="volume-val">8</span>
-        </div>
     </div>
 
     <script>
         const myIntroID = 'UbY3QIM69Ho'; // Твоя заставка
 
+        // 4 проверенных полнометражных фильма
         const marathonPlaylist = [
             { id: 'AlR0fQsm83Y', duration: 5234, title: 'Смешарики. Начало (Полнометражный)' },
             { id: '1vBgKm9qhhM', duration: 5133, title: 'Смешарики. Дежавю (Полнометражный)' },
@@ -185,7 +135,6 @@
 
         const totalMarathonDuration = marathonPlaylist.reduce((sum, item) => sum + item.duration, 0);
         let isMuted = true;
-        let currentVolumeLevel = 80; 
 
         function runLiveTv() {
             const player = document.getElementById('main-player');
@@ -245,24 +194,16 @@
             }
         }
 
-        // ИСПРАВЛЕНО: Добавлены точные значения [currentVolumeLevel] и исправлен синтаксис postMessage
         function toggleSound() {
             const player = document.getElementById('main-player');
             const btn = document.getElementById('mute-button');
-            const slider = document.getElementById('volume-input');
-            const sliderVal = document.getElementById('volume-val');
             
             if (isMuted) {
                 player.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
-                player.contentWindow.postMessage('{"event":"command","func":"setVolume","args":[' + currentVolumeLevel + ']}', '*');
+                player.contentWindow.postMessage('{"event":"command","func":"setVolume","args":[80]}', '*');
                 btn.innerText = "🔇 Выключить звук";
                 btn.style.borderColor = "#ff4a4a";
                 isMuted = false;
-                if (slider.value == 0) {
-                    slider.value = 8;
-                    sliderVal.innerText = 8;
-                    currentVolumeLevel = 80;
-                }
             } else {
                 player.contentWindow.postMessage('{"event":"command","func":"mute","args":""}', '*');
                 btn.innerText = "🔊 Включить звук";
@@ -271,7 +212,26 @@
             }
         }
 
-        // ИСПРАВЛЕНО: Полностью рабочий расчет уровней для шкалы от 1 до 10
-        function changeVolume(val) {
+        function applySoundState() {
             const player = document.getElementById('main-player');
-            const btn = document.getElementById('mute-button');
+            if (!isMuted && player && player.contentWindow) {
+                player.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
+                player.contentWindow.postMessage('{"event":"command","func":"setVolume","args":[80]}', '*');
+            }
+        }
+
+        function toggleFullscreen() {
+            const tvContainer = document.getElementById('tv-wrapper');
+            if (!document.fullscreenElement) {
+                if (tvContainer.requestFullscreen) { tvContainer.requestFullscreen(); }
+            } else {
+                if (document.exitFullscreen) { document.exitFullscreen(); }
+            }
+        }
+
+        runLiveTv();
+        setInterval(runLiveTv, 1000);
+    </script>
+
+</body>
+</html>
