@@ -49,6 +49,8 @@
             background: #000;
             width: 800px;
             height: 450px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
         }
 
         iframe {
@@ -57,15 +59,85 @@
             border: none;
         }
 
-        /* УМНЫЙ ОВЕРЛЕЙ: Закрывает видео от кликов, но оставляет 45px снизу для родного пульта YouTube! */
         .player-overlay {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
-            height: calc(100% - 45px);
+            height: 100%;
             background: rgba(0,0,0,0);
             z-index: 10;
+        }
+
+        .controls-panel {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: #1a1f29;
+            padding: 10px 20px;
+            border-radius: 12px;
+            border: 1px solid #232936;
+        }
+
+        .btn {
+            background: #232936;
+            color: #fff;
+            padding: 12px 24px;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            z-index: 20;
+        }
+
+        .volume-btn { border: 2px solid #00d2ff; }
+        .volume-btn:hover {
+            background: #00d2ff;
+            color: #11141a;
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.4);
+        }
+
+        .fullscreen-btn { border: 2px solid #3a7bd5; }
+        .fullscreen-btn:hover {
+            background: #3a7bd5;
+            box-shadow: 0 0 20px rgba(58, 123, 213, 0.4);
+        }
+
+        .volume-slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            color: #00d2ff;
+            font-size: 14px;
+            margin-left: 5px;
+            user-select: none;
+        }
+
+        .volume-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100px;
+            height: 6px;
+            border-radius: 3px;
+            background: #232936;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #00d2ff;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 210, 255, 0.6);
+            transition: transform 0.1s;
         }
     </style>
 </head>
@@ -76,16 +148,26 @@
         <div id="tv-subtitle" class="channel-subtitle">Запуск трансляции...</div>
     </div>
 
-    <!-- Наш телевизор -->
     <div id="tv-wrapper" class="player-container">
         <div class="player-overlay"></div>
         <iframe id="main-player" allow="autoplay; encrypted-media" allowfullscreen></iframe>
     </div>
 
+    <div class="controls-panel">
+        <button id="mute-button" class="btn volume-btn" onclick="toggleSound()">🔊 Включить звук</button>
+        <button class="btn fullscreen-btn" onclick="toggleFullscreen()">📺 Во весь экран</button>
+        
+        <div class="volume-slider-container">
+            <span>Громкость:</span>
+            <input type="range" id="volume-input" class="volume-slider" min="0" max="10" value="8" oninput="changeVolume(this.value)">
+            <span id="volume-val">8</span>
+        </div>
+    </div>
+
     <script>
         const myIntroID = 'UbY3QIM69Ho'; // Твоя заставка
 
-        // 4 проверенных полнометражных фильма
+        // Список фильмов
         const marathonPlaylist = [
             { id: 'AlR0fQsm83Y', duration: 5234, title: 'Смешарики. Начало (Полнометражный)' },
             { id: '1vBgKm9qhhM', duration: 5133, title: 'Смешарики. Дежавю (Полнометражный)' },
@@ -94,6 +176,8 @@
         ];
 
         const totalMarathonDuration = marathonPlaylist.reduce((sum, item) => sum + item.duration, 0);
+        let isMuted = true;
+        let currentVolumeLevel = 80; 
 
         function runLiveTv() {
             const player = document.getElementById('main-player');
@@ -104,31 +188,32 @@
             const currentMinute = now.getMinutes();
             const currentSecond = now.getSeconds();
             
-            // Ночное отключение эфира (с 22:01 до 07:59)
+            // Ночное отключение (с 22:01 до 07:59)
             if (currentHour >= 22 || currentHour < 8) {
                 player.src = "";
                 player.dataset.currentId = "";
                 subtitle.innerText = "Телеканал отключен до утра";
-                document.getElementById('tv-wrapper').style.display = "none";
+                document.querySelector('.controls-panel').style.display = "none";
                 return;
             }
 
-            document.getElementById('tv-wrapper').style.display = "block";
+            document.querySelector('.controls-panel').style.display = "flex";
 
-            // В первые 11 секунд абсолютно каждого нового часа запускаем твою заставку!
+            // В первые 11 секунд часа запускаем твою заставку!
             if (currentMinute === 0 && currentSecond < 11) {
-                const introLink = 'https://www.' + 'youtube' + '.com/embed/' + myIntroID + '?autoplay=1&mute=1&controls=1&rel=0';
+                const introLink = 'https://www.' + 'youtube' + '.com/embed/' + myIntroID + '?autoplay=1&controls=0&rel=0&enablejsapi=1';
                 if (player.dataset.currentId !== myIntroID) {
                     player.src = introLink;
                     player.dataset.currentId = myIntroID;
                     subtitle.innerText = "В эфире: Фирменная заставка Ветер ТВ";
+                    setTimeout(applySoundState, 1000);
                 }
                 return;
             }
 
-            // Расчет текущей секунды эфира внутри марафона Смешариков
-            const totalSecondsToday = (currentHour * 3600) + (currentMinute * 60) + currentSecond;
-            const currentLoopSecond = totalSecondsToday % totalMarathonDuration;
+            // ИСПРАВЛЕНО: Считаем секунды строго от 08:00 утра (начало вещания)
+            const secondsSinceEightAm = ((currentHour - 8) * 3600) + (currentMinute * 60) + currentSecond;
+            const currentLoopSecond = secondsSinceEightAm % totalMarathonDuration;
 
             let elapsedTime = 0;
             let currentVideo = marathonPlaylist;
@@ -143,20 +228,49 @@
                 elapsedTime += marathonPlaylist[i].duration;
             }
 
-            // Controls=1 возвращает родной пульт управления YouTube вниз экрана
             const youtubeEmbedLink = 'https://www.' + 'youtube' + '.com/embed/' + currentVideo.id + 
-                                     '?autoplay=1&controls=1&rel=0&start=' + startSeconds + '&mute=1';
+                                     '?autoplay=1&controls=0&rel=0&enablejsapi=1&start=' + startSeconds + '&mute=1';
 
             if (player.dataset.currentId !== currentVideo.id) {
                 player.src = youtubeEmbedLink;
                 player.dataset.currentId = currentVideo.id;
                 subtitle.innerText = "В эфире: " + currentVideo.title;
+                setTimeout(applySoundState, 1000);
             }
         }
 
-        runLiveTv();
-        setInterval(runLiveTv, 1000);
-    </script>
+        function toggleSound() {
+            const player = document.getElementById('main-player');
+            const btn = document.getElementById('mute-button');
+            const slider = document.getElementById('volume-input');
+            const sliderVal = document.getElementById('volume-val');
+            
+            if (isMuted) {
+                player.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
+                player.contentWindow.postMessage('{"event":"command","func":"setVolume","args":[' + currentVolumeLevel + ']}', '*');
+                btn.innerText = "🔇 Выключить звук";
+                btn.style.borderColor = "#ff4a4a";
+                isMuted = false;
+                if (slider.value == 0) {
+                    slider.value = 8;
+                    sliderVal.innerText = 8;
+                    currentVolumeLevel = 80;
+                }
+            } else {
+                player.contentWindow.postMessage('{"event":"command","func":"mute","args":""}', '*');
+                btn.innerText = "🔊 Включить звук";
+                btn.style.borderColor = "#00d2ff";
+                isMuted = true;
+            }
+        }
 
-</body>
-</html>
+        function changeVolume(val) {
+            const player = document.getElementById('main-player');
+            const btn = document.getElementById('mute-button');
+            document.getElementById('volume-val').innerText = val;
+            currentVolumeLevel = val * 10; 
+
+            if (val == 0) {
+                player.contentWindow.postMessage('{"event":"command","func":"mute","args":""}', '*');
+                btn.innerText = "🔊 Включить звук";
+                btn.style.borderColor = "#00d2ff";
