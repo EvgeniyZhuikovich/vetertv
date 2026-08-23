@@ -57,6 +57,7 @@
             border: none;
         }
 
+        /* Защитный слой от кликов и перемотки зрителями */
         .player-overlay {
             position: absolute;
             top: 0;
@@ -67,6 +68,7 @@
             z-index: 10;
         }
 
+        /* Экран профилактики / ночного отключения */
         .off-screen {
             display: none;
             flex-direction: column;
@@ -97,17 +99,19 @@
         <div id="tv-subtitle" class="channel-subtitle">Синхронизация эфира...</div>
     </div>
 
+    <!-- Основной рабочий плеер -->
     <div id="tv-wrapper" class="player-container">
         <div class="player-overlay"></div>
         <iframe id="main-player" allow="autoplay; encrypted-media" allowfullscreen></iframe>
     </div>
 
+    <!-- Заглушка ночного отключения -->
     <div id="static-screen" class="off-screen">
         <div class="off-text">🌙 Вещание окончено<br><span style="font-size: 14px; font-weight: 400; color: #434b5e; margin-top: 10px; display: block;">Эфир возобновится в 08:00</span></div>
     </div>
 
     <script>
-        // Твоя фирменная заставка (11 секунд)
+        // Твоя фирменная заставка Ветер ТВ (11 секунд)
         const myIntroID = 'UbY3QIM69Ho';
 
         // 1. Блок СМЕШАРИКОВ (08:00 - 11:00)
@@ -147,9 +151,9 @@
             { id: 'XstLg_D038U', duration: 300, title: 'Технический перерыв перед отключением вещания' }
         ];
 
-        // 8. МЕЖПРОГРАММНЫЙ ЭФИР (Для всех остальных окон — используем стабильный Сборник Смешариков)
+        // 8. ПЕТЯ И ВОЛК (Для всех остальных свободных часов, включая 11:00-12:00, 16:00-17:00, 19:00-20:00)
         const defaultSchedule = [
-            { id: 'pOWbR8Lt2Fk', duration: 4325, title: 'Легендарные Мультфильмы 2010-2015' }
+            { id: '9ZOzKUrzcPk', duration: 5642, title: 'Приключения Пети и Волка — Сборник серий' }
         ];
 
         function runLiveTv() {
@@ -220,7 +224,7 @@
                 currentLoopSecond = secondsToday % activePlaylist.reduce((sum, item) => sum + item.duration, 0);
             }
 
-            // ХИТРОСТЬ: В первые 11 секунд каждого нового часа принудительно пускаем твою заставку!
+            // Ровно в начале каждого нового часа (в 17:00, 20:00, 21:00) пускаем твою заставку на 11 секунд!
             if (currentMinute === 0 && now.getSeconds() < 11) {
                 const introLink = 'https://www.' + 'youtube' + '.com/embed/' + myIntroID + '?autoplay=1&mute=1&controls=0&rel=0';
                 if (player.dataset.currentId !== myIntroID) {
@@ -237,10 +241,3 @@
 
             for (let i = 0; i < activePlaylist.length; i++) {
                 if (currentLoopSecond >= elapsedTime && currentLoopSecond < elapsedTime + activePlaylist[i].duration) {
-                    currentVideo = activePlaylist[i];
-                    startSeconds = Math.floor(currentLoopSecond - elapsedTime);
-                    break;
-                }
-                elapsedTime += activePlaylist[i].duration;
-            }
-
