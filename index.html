@@ -101,7 +101,6 @@
     <!-- Основной рабочий плеер -->
     <div id="tv-wrapper" class="player-container">
         <div class="player-overlay"></div>
-        <!-- Добавили id="main-player" и параметр enablejsapi=1 для управления -->
         <iframe id="main-player" allow="autoplay; encrypted-media" allowfullscreen></iframe>
     </div>
 
@@ -144,13 +143,11 @@
 
             // В первые 11 секунд абсолютно каждого нового часа запускаем твою заставку!
             if (currentMinute === 0 && currentSecond < 11) {
-                // Добавляем параметр enablejsapi=1 для работы звука
-                const introLink = 'https://www.' + 'youtube' + '.com/embed/' + myIntroID + '?autoplay=1&controls=0&rel=0&enablejsapi=1';
+                const introLink = 'https://www.' + 'youtube' + '.com/embed/' + myIntroID + '?autoplay=1&mute=1&controls=0&rel=0&enablejsapi=1';
                 if (player.dataset.currentId !== myIntroID) {
                     player.src = introLink;
                     player.dataset.currentId = myIntroID;
                     subtitle.innerText = "В эфире: Фирменная заставка Ветер ТВ";
-                    // Если звук уже был включен пользователем, сохраняем его
                     setTimeout(applySoundState, 1000);
                 }
                 return;
@@ -173,15 +170,14 @@
                 elapsedTime += marathonPlaylist[i].duration;
             }
 
-            // Включаем enablejsapi=1, убираем controls, ставим нужную секунду
+            // ИСПРАВЛЕНО: Добавлен &mute=1 в конец ссылки для обхода большой красной кнопки
             const youtubeEmbedLink = 'https://www.' + 'youtube' + '.com/embed/' + currentVideo.id + 
-                                     '?autoplay=1&controls=0&rel=0&enablejsapi=1&start=' + startSeconds;
+                                     '?autoplay=1&controls=0&rel=0&enablejsapi=1&start=' + startSeconds + '&mute=1';
 
             if (player.dataset.currentId !== currentVideo.id) {
                 player.src = youtubeEmbedLink;
                 player.dataset.currentId = currentVideo.id;
                 subtitle.innerText = "В эфире: " + currentVideo.title;
-                // Восстанавливаем состояние звука после переключения видео
                 setTimeout(applySoundState, 1000);
             }
         }
@@ -192,14 +188,12 @@
             const btn = document.getElementById('mute-button');
             
             if (isMuted) {
-                // Посылаем команду включить звук внутрь фрейма YouTube
                 player.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
                 player.contentWindow.postMessage('{"event":"command","func":"setVolume","args":[80]}', '*');
                 btn.innerText = "🔇 Выключить звук";
                 btn.style.borderColor = "#ff4a4a";
                 isMuted = false;
             } else {
-                // Посылаем команду выключить звук
                 player.contentWindow.postMessage('{"event":"command","func":"mute","args":""}', '*');
                 btn.innerText = "🔊 Включить звук";
                 btn.style.borderColor = "#00d2ff";
@@ -207,7 +201,6 @@
             }
         }
 
-        // Вспомогательная функция, чтобы звук не пропадал при автопереключении серий
         function applySoundState() {
             const player = document.getElementById('main-player');
             if (!isMuted && player && player.contentWindow) {
