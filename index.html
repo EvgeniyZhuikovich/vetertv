@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ветер ТВ — Марафон Смешариков</title>
+    <title>Ветер ТВ — Прямой Эфир</title>
+    <!-- Подключаем YouTube API для управления звуком -->
+    <script src="https://youtube.com"></script>
     <style>
         body {
             margin: 0;
@@ -49,6 +51,7 @@
             background: #000;
             width: 800px;
             height: 450px;
+            margin-bottom: 20px;
         }
 
         iframe {
@@ -57,38 +60,35 @@
             border: none;
         }
 
-        /* Защитный слой от кликов и перемотки зрителями */
+        /* Защитный слой намертво закрывает весь плеер */
         .player-overlay {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
-            height: calc(100% - 40px);
+            height: 100%;
             background: rgba(0,0,0,0);
             z-index: 10;
         }
 
-        /* Экран ночной профилактики */
-        .off-screen {
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 800px;
-            height: 450px;
-            background: #0d0f13;
-            border-radius: 16px;
-            border: 3px dashed #3a7bd5;
-            box-shadow: inset 0 0 40px rgba(0,0,0,0.8);
+        /* Кнопка включения звука */
+        .volume-btn {
+            background: #232936;
+            color: #fff;
+            border: 2px solid #00d2ff;
+            padding: 12px 28px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
 
-        .off-text {
-            font-size: 24px;
-            font-weight: 700;
-            color: #6c7a9c;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-align: center;
+        .volume-btn:hover {
+            background: #00d2ff;
+            color: #11141a;
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.4);
         }
     </style>
 </head>
@@ -96,25 +96,23 @@
 
     <div class="channel-header">
         <h1 class="channel-title">Ветер ТВ</h1>
-        <div id="tv-subtitle" class="channel-subtitle">Запуск трансляции...</div>
+        <div id="tv-subtitle" class="channel-subtitle">Синхронизация эфира...</div>
     </div>
 
-    <!-- Основной рабочий плеер -->
-    <div id="tv-wrapper" class="player-container">
+    <div class="player-container">
+        <!-- Оверлей защищает видео -->
         <div class="player-overlay"></div>
-        <iframe id="main-player" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        <!-- Контейнер для API -->
+        <div id="main-player"></div>
     </div>
 
-    <!-- Заглушка ночного отключения -->
-    <div id="static-screen" class="off-screen">
-        <div class="off-text">🌙 Вещание окончено<br><span style="font-size: 14px; font-weight: 400; color: #434b5e; margin-top: 10px; display: block;">Эфир возобновится в 08:00</span></div>
-    </div>
+    <!-- Наша личная кнопка для зрителей -->
+    <button id="mute-button" class="volume-btn" onclick="toggleSound()">🔊 Включить звук</button>
 
     <script>
-        // Твоя фирменная заставка Ветер ТВ (11 секунд)
-        const myIntroID = 'UbY3QIM69Ho';
+        let player;
+        const myIntroID = 'UbY3QIM69Ho'; // Твоя заставка
 
-        // КРУГЛОСУТОЧНЫЙ ПЛЕЙЛИСТ ИЗ 4-Х ТВОИХ ФИЛЬМОВ
         const marathonPlaylist = [
             { id: 'AlR0fQsm83Y', duration: 5234, title: 'Смешарики. Начало (Полнометражный)' },
             { id: '1vBgKm9qhhM', duration: 5133, title: 'Смешарики. Дежавю (Полнометражный)' },
@@ -122,50 +120,58 @@
             { id: 'gs-MZg77o6w', duration: 5035, title: 'Смешарики снимают кино (Киноальманах)' }
         ];
 
-        // Считаем общую длину марафона в секундах
         const totalMarathonDuration = marathonPlaylist.reduce((sum, item) => sum + item.duration, 0);
 
-        function runLiveTv() {
-            const player = document.getElementById('main-player');
-            const subtitle = document.getElementById('tv-subtitle');
-            const tvWrapper = document.getElementById('tv-wrapper');
-            const staticScreen = document.getElementById('static-screen');
-            
+        // Функция запускается сама, когда YouTube API готово
+        function onYouTubeIframeAPIReady() {
+            // Рассчитываем стартовое видео и секунду до создания плеера
+            const videoData = calculateCurrentVideo();
+
+            player = new YT.Player('main-player', {
+                height: '450',
+                width: '800',
+                videoId: videoData.video.id,
+                playerVars: {
+                    'autoplay': 1,
+                    'mute': 1,       // Исходно без звука, чтобы браузер разрешил запуск
+                    'controls': 0,   // Прячем интерфейс YouTube
+                    'rel': 0,
+                    'start': videoData.startSeconds
+                },
+                events: {
+                    'onReady': onPlayerReady
+                }
+            });
+        }
+
+        function onPlayerReady(event) {
+            document.getElementById('tv-subtitle').innerText = "В эфире: " + calculateCurrentVideo().video.title;
+            // Запускаем ежесекундную проверку сетки
+            setInterval(checkBroadcastGrid, 1000);
+        }
+
+        // Логика расчета текущего видео на основе времени
+        function calculateCurrentVideo() {
             const now = new Date();
             const currentHour = now.getHours();
             const currentMinute = now.getMinutes();
             const currentSecond = now.getSeconds();
-            
-            // 1. Ночное отключение эфира (с 22:01 до 07:59)
+
+            // Если время ночное (22:01 - 07:59), возвращаем заставку (хотя блок скрыт, для безопасности)
             if (currentHour >= 22 || currentHour < 8) {
-                player.src = "";
-                player.dataset.currentId = "";
-                tvWrapper.style.display = "none";
-                staticScreen.style.display = "flex";
-                subtitle.innerText = "Телеканал отключен до утра";
-                return;
+                return { isIntro: false, video: marathonPlaylist[0], startSeconds: 0, isOff: true };
             }
 
-            tvWrapper.style.display = "block";
-            staticScreen.style.display = "none";
-
-            // 2. В первые 11 секунд абсолютно каждого нового часа запускаем твою заставку!
+            // Проверка заставки в начале часа
             if (currentMinute === 0 && currentSecond < 11) {
-                const introLink = 'https://www.' + 'youtube' + '.com/embed/' + myIntroID + '?autoplay=1&mute=1&controls=0&rel=0';
-                if (player.dataset.currentId !== myIntroID) {
-                    player.src = introLink;
-                    player.dataset.currentId = myIntroID;
-                    subtitle.innerText = "В эфире: Фирменная заставка Ветер ТВ";
-                }
-                return;
+                return { isIntro: true, video: { id: myIntroID, title: 'Фирменная заставка Ветер ТВ' }, startSeconds: 0 };
             }
 
-            // 3. Расчет текущей секунды эфира внутри марафона Смешариков (относительно начала дня вещания)
             const totalSecondsToday = (currentHour * 3600) + (currentMinute * 60) + currentSecond;
             const currentLoopSecond = totalSecondsToday % totalMarathonDuration;
 
             let elapsedTime = 0;
-            let currentVideo = marathonPlaylist;
+            let currentVideo = marathonPlaylist[0];
             let startSeconds = 0;
 
             for (let i = 0; i < marathonPlaylist.length; i++) {
@@ -177,19 +183,50 @@
                 elapsedTime += marathonPlaylist[i].duration;
             }
 
-            const youtubeEmbedLink = 'https://www.' + 'youtube' + '.com/embed/' + currentVideo.id + 
-                                     '?autoplay=1&mute=1&controls=0&rel=0&start=' + startSeconds;
+            return { isIntro: false, video: currentVideo, startSeconds: startSeconds };
+        }
 
-            if (player.dataset.currentId !== currentVideo.id) {
-                player.src = youtubeEmbedLink;
-                player.dataset.currentId = currentVideo.id;
-                subtitle.innerText = "В эфире: " + currentVideo.title;
+        // Ежесекундная проверка для смены фильмов и ночного отключения
+        function checkBroadcastGrid() {
+            const now = new Date();
+            const currentHour = now.getHours();
+            const subtitle = document.getElementById('tv-subtitle');
+            const button = document.getElementById('mute-button');
+
+            if (currentHour >= 22 || currentHour < 8) {
+                player.stopVideo();
+                document.getElementById('main-player').style.display = "none";
+                button.style.display = "none";
+                subtitle.innerText = "Телеканал отключен до утра (Ночная профилактика)";
+                return;
+            }
+
+            const currentData = calculateCurrentVideo();
+            const activeId = player.getVideoData().video_id;
+
+            if (activeId !== currentData.video.id) {
+                player.loadVideoById({
+                    videoId: currentData.video.id,
+                    startSeconds: currentData.startSeconds
+                });
+                subtitle.innerText = "В эфире: " + currentData.video.title;
             }
         }
 
-        runLiveTv();
-        // Ежесекундная проверка для точности таймингов заставки
-        setInterval(runLiveTv, 1000);
+        // Функция нашей кнопки «Включить звук»
+        function toggleSound() {
+            const btn = document.getElementById('mute-button');
+            if (player && player.isMuted()) {
+                player.unMute(); // Программное включение звука в обход оверлея!
+                player.setVolume(80); // Ставим хорошую громкость
+                btn.innerText = "🔇 Выключить звук";
+                btn.style.borderColor = "#ff4a4a";
+            } else if (player) {
+                player.mute();
+                btn.innerText = "🔊 Включить звук";
+                btn.style.borderColor = "#00d2ff";
+            }
+        }
     </script>
 
 </body>
