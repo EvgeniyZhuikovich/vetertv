@@ -70,20 +70,26 @@
             z-index: 10;
         }
 
-        /* Контейнер для кнопок */
+        /* Панель управления */
         .controls-panel {
             display: flex;
+            align-items: center;
             gap: 15px;
+            background: #1a1f29;
+            padding: 10px 20px;
+            border-radius: 12px;
+            border: 1px solid #232936;
         }
 
-        /* Общие стили кнопок */
+        /* Стили кнопок */
         .btn {
             background: #232936;
             color: #fff;
-            padding: 12px 28px;
-            font-size: 16px;
+            padding: 12px 24px;
+            font-size: 15px;
             font-weight: 600;
             border-radius: 8px;
+            border: none;
             cursor: pointer;
             transition: all 0.2s ease;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
@@ -102,6 +108,45 @@
             background: #3a7bd5;
             box-shadow: 0 0 20px rgba(58, 123, 213, 0.4);
         }
+
+        /* Контейнер регулятора громкости */
+        .volume-slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            color: #00d2ff;
+            font-size: 14px;
+            margin-left: 5px;
+        }
+
+        /* Стилизация ползунка */
+        .volume-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100px;
+            height: 6px;
+            border-radius: 3px;
+            background: #232936;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #00d2ff;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 210, 255, 0.6);
+            transition: transform 0.1s;
+        }
+
+        .volume-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
     </style>
 </head>
 <body>
@@ -111,20 +156,25 @@
         <div id="tv-subtitle" class="channel-subtitle">Запуск трансляции...</div>
     </div>
 
-    <!-- Наш контейнер-телевизор -->
     <div id="tv-wrapper" class="player-container">
         <div class="player-overlay"></div>
-        <iframe id="main-player" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>
+        <iframe id="main-player" allow="autoplay; encrypted-media" allowfullscreen></iframe>
     </div>
 
-    <!-- Панель кнопок теперь содержит две кнопки в ряд -->
     <div class="controls-panel">
         <button id="mute-button" class="btn volume-btn" onclick="toggleSound()">🔊 Включить звук</button>
         <button class="btn fullscreen-btn" onclick="toggleFullscreen()">📺 Во весь экран</button>
+        
+        <!-- Новый регулятор громкости от 1 до 10 -->
+        <div class="volume-slider-container">
+            <span>Громкость:</span>
+            <input type="range" id="volume-input" class="volume-slider" min="0" max="10" value="8" oninput="changeVolume(this.value)">
+            <span id="volume-val">8</span>
+        </div>
     </div>
 
     <script>
-        const myIntroID = 'UbY3QIM69Ho'; // Твоя заставка
+        const myIntroID = 'UbY3QIM69Ho';
 
         const marathonPlaylist = [
             { id: 'AlR0fQsm83Y', duration: 5234, title: 'Смешарики. Начало (Полнометражный)' },
@@ -135,6 +185,7 @@
 
         const totalMarathonDuration = marathonPlaylist.reduce((sum, item) => sum + item.duration, 0);
         let isMuted = true;
+        let currentVolumeLevel = 80; // По умолчанию громкость 8 (80%)
 
         function runLiveTv() {
             const player = document.getElementById('main-player');
@@ -145,7 +196,6 @@
             const currentMinute = now.getMinutes();
             const currentSecond = now.getSeconds();
             
-            // Ночное отключение (с 22:01 до 07:59)
             if (currentHour >= 22 || currentHour < 8) {
                 player.src = "";
                 player.dataset.currentId = "";
@@ -156,7 +206,6 @@
 
             document.querySelector('.controls-panel').style.display = "flex";
 
-            // В первые 11 секунд часа запускаем твою заставку!
             if (currentMinute === 0 && currentSecond < 11) {
                 const introLink = 'https://www.' + 'youtube' + '.com/embed/' + myIntroID + '?autoplay=1&controls=0&rel=0&enablejsapi=1';
                 if (player.dataset.currentId !== myIntroID) {
@@ -168,7 +217,6 @@
                 return;
             }
 
-            // Расчет секунды эфира
             const totalSecondsToday = (currentHour * 3600) + (currentMinute * 60) + currentSecond;
             const currentLoopSecond = totalSecondsToday % totalMarathonDuration;
 
@@ -196,17 +244,24 @@
             }
         }
 
-        // Кнопка звука
+        // Кнопка Вкл/Выкл звук
         function toggleSound() {
             const player = document.getElementById('main-player');
             const btn = document.getElementById('mute-button');
+            const slider = document.getElementById('volume-input');
+            const sliderVal = document.getElementById('volume-val');
             
             if (isMuted) {
                 player.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
-                player.contentWindow.postMessage('{"event":"command","func":"setVolume","args":}', '*');
+                player.contentWindow.postMessage('{"event":"command","func":"setVolume","args":[' + currentVolumeLevel + ']}', '*');
                 btn.innerText = "🔇 Выключить звук";
                 btn.style.borderColor = "#ff4a4a";
                 isMuted = false;
+                if (slider.value == 0) {
+                    slider.value = 8;
+                    sliderVal.innerText = 8;
+                    currentVolumeLevel = 80;
+                }
             } else {
                 player.contentWindow.postMessage('{"event":"command","func":"mute","args":""}', '*');
                 btn.innerText = "🔊 Включить звук";
@@ -215,40 +270,11 @@
             }
         }
 
-        function applySoundState() {
+        // НОВАЯ ФУНКЦИЯ: Плавное изменение громкости слайдером от 0 до 10
+        function changeVolume(val) {
             const player = document.getElementById('main-player');
-            if (!isMuted && player && player.contentWindow) {
-                player.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
-                player.contentWindow.postMessage('{"event":"command","func":"setVolume","args":}', '*');
-            }
-        }
-
-        // НОВАЯ ФУНКЦИЯ: Раскрытие контейнера плеера на весь монитор
-        function toggleFullscreen() {
-            const tvContainer = document.getElementById('tv-wrapper');
+            const btn = document.getElementById('mute-button');
+            document.getElementById('volume-val').innerText = val;
             
-            if (!document.fullscreenElement) {
-                // Если экран не развернут — разворачиваем контейнер плеера
-                if (tvContainer.requestFullscreen) {
-                    tvContainer.requestFullscreen();
-                } else if (tvContainer.mozRequestFullScreen) { /* Firefox */
-                    tvContainer.mozRequestFullScreen();
-                } else if (tvContainer.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
-                    tvContainer.webkitRequestFullscreen();
-                } else if (tvContainer.msRequestFullscreen) { /* IE/Edge */
-                    tvContainer.msRequestFullscreen();
-                }
-            } else {
-                // Если уже развернут — выходим из полноэкранного режима
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                }
-            }
-        }
+            currentVolumeLevel = val * 10; // Переводим шкалу 1-10 в проценты 10-100 для YouTube
 
-        runLiveTv();
-        setInterval(runLiveTv, 1000);
-    </script>
-
-</body>
-</html>
