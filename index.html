@@ -57,6 +57,7 @@
             border: none;
         }
 
+        /* Защитный слой от кликов и перемотки зрителями */
         .player-overlay {
             position: absolute;
             top: 0;
@@ -110,41 +111,50 @@
     </div>
 
     <script>
-        // Программные блоки мультфильмов
+        // ТВОЯ СОБСТВЕННАЯ ЗАСТАВКА ВЕТЕР ТВ (11 секунд)
+        const myIntroID = 'UbY3QIM69Ho';
+
+        // 1. Блок СМЕШАРИКОВ (08:00 - 11:00)
         const smesharikiSchedule = [
             { id: 'AlR0fQsm83Y', duration: 5234, title: 'Смешарики. Начало (Полнометражный)' },
             { id: 'rXtaU_yitlQ', duration: 4210, title: 'Смешарики 2D — Большой сборник' }
         ];
 
+        // 2. Блок ФИКСИКОВ (12:00 - 14:00)
         const fiksikiSchedule = [
             { id: 'V8Er1uk4fcw', duration: 3650, title: 'Фиксики — Огромный сборник серий' }
         ];
 
+        // 3. Блок ПРОСТОКВАШИНО (14:00 - 16:00)
         const prostokvashinoSchedule = [
-            { id: 'OWbXv_2Y_f8', duration: 7329, title: 'Новое Простоквашино — Все серии подряд' }
+            { id: '-TX2qLecilw', duration: 2253, title: 'Новое Простоквашино — Сборник серий' }
         ];
 
+        // 4. Блок ТРИ КОТА (17:00 - 19:00)
         const triKotaSchedule = [
-            { id: 'Z96kS4_pXQ0', duration: 7200, title: 'Три кота — Большой праздничный сборник' }
+            { id: 'uBNy9r6X5GI', duration: 3777, title: 'Три кота — Самый большой сборник (Часть 1)' },
+            { id: 'BiDUGLoI90w', duration: 3841, title: 'Три кота — Самый большой сборник (Часть 2)' }
         ];
 
+        // 5. ТЕХНИЧЕСКИЙ ПЕРЕРЫВ (20:00 - 21:00)
         const techBreakSchedule = [
             { id: '5qap5aO4i9A', duration: 3600, title: 'Технический перерыв // Музыкальная пауза (No Copyright)' }
         ];
 
+        // 6. Блок ЛУНТИКА (21:00 - 21:55)
         const luntikSchedule = [
             { id: 'S7wU96O-C9Y', duration: 3300, title: 'Лунтик и его друзья — Вечерний сборник' }
         ];
 
-        // Настроечные ТВ-полосы (21:55 - 22:00)
+        // 7. Настроечные ТВ-полосы (21:55 - 22:00)
         const tvLinesSchedule = [
             { id: 'XstLg_D038U', duration: 300, title: 'Технический перерыв перед отключением вещания' }
         ];
 
-        // Межпрограммный фоновый эфир для остальных «окон»
+        // 8. МЕЖПРОГРАММНЫЙ ЭФИР (Все остальные свободные часы)
         const defaultSchedule = [
             { id: 'pOWbR8Lt2Fk', duration: 4325, title: 'Легендарные Мультфильмы 2010-2015' },
-            { id: '9bZkp7q19f0', duration: 180,  title: 'Фирменная заставка Ветер ТВ' }
+            { id: myIntroID,     duration: 11,   title: 'Фирменная заставка Ветер ТВ' }
         ];
 
         function runLiveTv() {
@@ -158,9 +168,8 @@
             const currentMinute = now.getMinutes();
             const secondsToday = (now.getHours() * 3600) + (now.getMinutes() * 60) + now.getSeconds();
 
-            // 1. Полное ночное отключение эфира (с 22:01 до 07:59)
+            // Полное ночное отключение эфира (с 22:01 до 07:59)
             if (currentHour >= 22 || currentHour < 8) {
-                // Прячем плеер, показываем настроечный экран профилактики
                 player.src = "";
                 player.dataset.currentId = "";
                 tvWrapper.style.display = "none";
@@ -169,14 +178,13 @@
                 return;
             }
 
-            // Если эфир активен, возвращаем плеер на место
             tvWrapper.style.display = "block";
             staticScreen.style.display = "none";
 
             let activePlaylist = [];
             let currentLoopSecond = 0;
 
-            // 2. Распределение по временным зонам
+            // Распределение по временным зонам
             if (currentHour >= 8 && currentHour < 11) {
                 activePlaylist = smesharikiSchedule;
                 const secondsSinceStart = ((currentHour - 8) * 3600) + (now.getMinutes() * 60) + now.getSeconds();
@@ -203,13 +211,11 @@
                 currentLoopSecond = secondsSinceStart % activePlaylist.reduce((sum, item) => sum + item.duration, 0);
             } 
             else if (currentHour === 21 && currentMinute < 55) {
-                // Лунтик идет с 21:00 до 21:54:59
                 activePlaylist = luntikSchedule;
                 const secondsSinceStart = (now.getMinutes() * 60) + now.getSeconds();
                 currentLoopSecond = secondsSinceStart % activePlaylist.reduce((sum, item) => sum + item.duration, 0);
             }
             else if (currentHour === 21 && currentMinute >= 55) {
-                // ТВ Полосы включаются ровно в 21:55 и идут до 22:00
                 activePlaylist = tvLinesSchedule;
                 const secondsSinceStart = ((now.getMinutes() - 55) * 60) + now.getSeconds();
                 currentLoopSecond = secondsSinceStart % activePlaylist.reduce((sum, item) => sum + item.duration, 0);
@@ -237,10 +243,3 @@
 
             if (player.dataset.currentId !== currentVideo.id) {
                 player.src = youtubeEmbedLink;
-                player.dataset.currentId = currentVideo.id;
-                subtitle.innerText = "В эфире: " + currentVideo.title;
-            }
-        }
-
-        runLiveTv();
-        setInterval(runLiveTv, 15000); // Проверяем сетку чаще (каждые 15 секунд), чтобы точнее поймать тайминги
