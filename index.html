@@ -118,6 +118,7 @@
             color: #00d2ff;
             font-size: 14px;
             margin-left: 5px;
+            user-select: none;
         }
 
         /* Стилизация ползунка */
@@ -165,7 +166,6 @@
         <button id="mute-button" class="btn volume-btn" onclick="toggleSound()">🔊 Включить звук</button>
         <button class="btn fullscreen-btn" onclick="toggleFullscreen()">📺 Во весь экран</button>
         
-        <!-- Новый регулятор громкости от 1 до 10 -->
         <div class="volume-slider-container">
             <span>Громкость:</span>
             <input type="range" id="volume-input" class="volume-slider" min="0" max="10" value="8" oninput="changeVolume(this.value)">
@@ -185,7 +185,7 @@
 
         const totalMarathonDuration = marathonPlaylist.reduce((sum, item) => sum + item.duration, 0);
         let isMuted = true;
-        let currentVolumeLevel = 80; // По умолчанию громкость 8 (80%)
+        let currentVolumeLevel = 80; 
 
         function runLiveTv() {
             const player = document.getElementById('main-player');
@@ -244,7 +244,6 @@
             }
         }
 
-        // Кнопка Вкл/Выкл звук
         function toggleSound() {
             const player = document.getElementById('main-player');
             const btn = document.getElementById('mute-button');
@@ -270,11 +269,13 @@
             }
         }
 
-        // НОВАЯ ФУНКЦИЯ: Плавное изменение громкости слайдером от 0 до 10
         function changeVolume(val) {
             const player = document.getElementById('main-player');
             const btn = document.getElementById('mute-button');
             document.getElementById('volume-val').innerText = val;
             
-            currentVolumeLevel = val * 10; // Переводим шкалу 1-10 в проценты 10-100 для YouTube
+            currentVolumeLevel = val * 10; 
 
+            if (val == 0) {
+                player.contentWindow.postMessage('{"event":"command","func":"mute","args":""}', '*');
+                btn.innerText = "🔊 Включить звук";
