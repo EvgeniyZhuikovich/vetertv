@@ -50,6 +50,7 @@
             width: 800px;
             height: 450px;
             margin-bottom: 20px;
+            transition: all 0.3s ease;
         }
 
         iframe {
@@ -58,7 +59,7 @@
             border: none;
         }
 
-        /* Защитный слой полностью закрывает видео от перемотки */
+        /* Защитный слой */
         .player-overlay {
             position: absolute;
             top: 0;
@@ -69,11 +70,16 @@
             z-index: 10;
         }
 
-        /* Кнопка управления звуком */
-        .volume-btn {
+        /* Контейнер для кнопок */
+        .controls-panel {
+            display: flex;
+            gap: 15px;
+        }
+
+        /* Общие стили кнопок */
+        .btn {
             background: #232936;
             color: #fff;
-            border: 2px solid #00d2ff;
             padding: 12px 28px;
             font-size: 16px;
             font-weight: 600;
@@ -84,10 +90,17 @@
             z-index: 20;
         }
 
+        .volume-btn { border: 2px solid #00d2ff; }
         .volume-btn:hover {
             background: #00d2ff;
             color: #11141a;
             box-shadow: 0 0 20px rgba(0, 210, 255, 0.4);
+        }
+
+        .fullscreen-btn { border: 2px solid #3a7bd5; }
+        .fullscreen-btn:hover {
+            background: #3a7bd5;
+            box-shadow: 0 0 20px rgba(58, 123, 213, 0.4);
         }
     </style>
 </head>
@@ -98,19 +111,21 @@
         <div id="tv-subtitle" class="channel-subtitle">Запуск трансляции...</div>
     </div>
 
-    <!-- Основной рабочий плеер -->
+    <!-- Наш контейнер-телевизор -->
     <div id="tv-wrapper" class="player-container">
         <div class="player-overlay"></div>
-        <iframe id="main-player" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        <iframe id="main-player" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>
     </div>
 
-    <!-- Наша внешняя кнопка включения звука -->
-    <button id="mute-button" class="volume-btn" onclick="toggleSound()">🔊 Включить звук</button>
+    <!-- Панель кнопок теперь содержит две кнопки в ряд -->
+    <div class="controls-panel">
+        <button id="mute-button" class="btn volume-btn" onclick="toggleSound()">🔊 Включить звук</button>
+        <button class="btn fullscreen-btn" onclick="toggleFullscreen()">📺 Во весь экран</button>
+    </div>
 
     <script>
         const myIntroID = 'UbY3QIM69Ho'; // Твоя заставка
 
-        // 4 проверенных полнометражных фильма
         const marathonPlaylist = [
             { id: 'AlR0fQsm83Y', duration: 5234, title: 'Смешарики. Начало (Полнометражный)' },
             { id: '1vBgKm9qhhM', duration: 5133, title: 'Смешарики. Дежавю (Полнометражный)' },
@@ -130,20 +145,20 @@
             const currentMinute = now.getMinutes();
             const currentSecond = now.getSeconds();
             
-            // Ночное отключение эфира (с 22:01 до 07:59)
+            // Ночное отключение (с 22:01 до 07:59)
             if (currentHour >= 22 || currentHour < 8) {
                 player.src = "";
                 player.dataset.currentId = "";
                 subtitle.innerText = "Телеканал отключен до утра";
-                document.getElementById('mute-button').style.display = "none";
+                document.querySelector('.controls-panel').style.display = "none";
                 return;
             }
 
-            document.getElementById('mute-button').style.display = "inline-block";
+            document.querySelector('.controls-panel').style.display = "flex";
 
-            // В первые 11 секунд абсолютно каждого нового часа запускаем твою заставку!
+            // В первые 11 секунд часа запускаем твою заставку!
             if (currentMinute === 0 && currentSecond < 11) {
-                const introLink = 'https://www.' + 'youtube' + '.com/embed/' + myIntroID + '?autoplay=1&mute=1&controls=0&rel=0&enablejsapi=1';
+                const introLink = 'https://www.' + 'youtube' + '.com/embed/' + myIntroID + '?autoplay=1&controls=0&rel=0&enablejsapi=1';
                 if (player.dataset.currentId !== myIntroID) {
                     player.src = introLink;
                     player.dataset.currentId = myIntroID;
@@ -153,7 +168,7 @@
                 return;
             }
 
-            // Расчет текущей секунды эфира внутри марафона Смешариков
+            // Расчет секунды эфира
             const totalSecondsToday = (currentHour * 3600) + (currentMinute * 60) + currentSecond;
             const currentLoopSecond = totalSecondsToday % totalMarathonDuration;
 
@@ -170,7 +185,6 @@
                 elapsedTime += marathonPlaylist[i].duration;
             }
 
-            // ИСПРАВЛЕНО: Добавлен &mute=1 в конец ссылки для обхода большой красной кнопки
             const youtubeEmbedLink = 'https://www.' + 'youtube' + '.com/embed/' + currentVideo.id + 
                                      '?autoplay=1&controls=0&rel=0&enablejsapi=1&start=' + startSeconds + '&mute=1';
 
@@ -182,14 +196,14 @@
             }
         }
 
-        // Программное управление звуком через postMessage
+        // Кнопка звука
         function toggleSound() {
             const player = document.getElementById('main-player');
             const btn = document.getElementById('mute-button');
             
             if (isMuted) {
                 player.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
-                player.contentWindow.postMessage('{"event":"command","func":"setVolume","args":[80]}', '*');
+                player.contentWindow.postMessage('{"event":"command","func":"setVolume","args":}', '*');
                 btn.innerText = "🔇 Выключить звук";
                 btn.style.borderColor = "#ff4a4a";
                 isMuted = false;
@@ -205,7 +219,30 @@
             const player = document.getElementById('main-player');
             if (!isMuted && player && player.contentWindow) {
                 player.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
-                player.contentWindow.postMessage('{"event":"command","func":"setVolume","args":[80]}', '*');
+                player.contentWindow.postMessage('{"event":"command","func":"setVolume","args":}', '*');
+            }
+        }
+
+        // НОВАЯ ФУНКЦИЯ: Раскрытие контейнера плеера на весь монитор
+        function toggleFullscreen() {
+            const tvContainer = document.getElementById('tv-wrapper');
+            
+            if (!document.fullscreenElement) {
+                // Если экран не развернут — разворачиваем контейнер плеера
+                if (tvContainer.requestFullscreen) {
+                    tvContainer.requestFullscreen();
+                } else if (tvContainer.mozRequestFullScreen) { /* Firefox */
+                    tvContainer.mozRequestFullScreen();
+                } else if (tvContainer.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+                    tvContainer.webkitRequestFullscreen();
+                } else if (tvContainer.msRequestFullscreen) { /* IE/Edge */
+                    tvContainer.msRequestFullscreen();
+                }
+            } else {
+                // Если уже развернут — выходим из полноэкранного режима
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
             }
         }
 
