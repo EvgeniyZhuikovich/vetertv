@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ветер ТВ — Прямой Эфир</title>
+    <title>Ветер ТВ — Марафон Смешариков</title>
     <style>
         body {
             margin: 0;
@@ -68,7 +68,7 @@
             z-index: 10;
         }
 
-        /* Экран профилактики / ночного отключения */
+        /* Экран ночной профилактики */
         .off-screen {
             display: none;
             flex-direction: column;
@@ -96,7 +96,7 @@
 
     <div class="channel-header">
         <h1 class="channel-title">Ветер ТВ</h1>
-        <div id="tv-subtitle" class="channel-subtitle">Синхронизация эфира...</div>
+        <div id="tv-subtitle" class="channel-subtitle">Запуск трансляции...</div>
     </div>
 
     <!-- Основной рабочий плеер -->
@@ -114,47 +114,16 @@
         // Твоя фирменная заставка Ветер ТВ (11 секунд)
         const myIntroID = 'UbY3QIM69Ho';
 
-        // 1. Блок СМЕШАРИКОВ (08:00 - 11:00)
-        const smesharikiSchedule = [
+        // КРУГЛОСУТОЧНЫЙ ПЛЕЙЛИСТ ИЗ 4-Х ТВОИХ ФИЛЬМОВ
+        const marathonPlaylist = [
             { id: 'AlR0fQsm83Y', duration: 5234, title: 'Смешарики. Начало (Полнометражный)' },
-            { id: 'rXtaU_yitlQ', duration: 4210, title: 'Смешарики 2D — Большой сборник' }
+            { id: '1vBgKm9qhhM', duration: 5133, title: 'Смешарики. Дежавю (Полнометражный)' },
+            { id: 'xfFu4P2FZZc', duration: 4730, title: 'Смешарики. Легенда о золотом драконе (Полнометражный)' },
+            { id: 'gs-MZg77o6w', duration: 5035, title: 'Смешарики снимают кино (Киноальманах)' }
         ];
 
-        // 2. Блок ФИКСИКОВ (12:00 - 14:00)
-        const fiksikiSchedule = [
-            { id: 'V8Er1uk4fcw', duration: 3650, title: 'Фиксики — Огромный сборник серий' }
-        ];
-
-        // 3. Блок ПРОСТОКВАШИНО (14:00 - 16:00)
-        const prostokvashinoSchedule = [
-            { id: '-TX2qLecilw', duration: 2253, title: 'Новое Простоквашино — Сборник серий' }
-        ];
-
-        // 4. Блок ТРИ КОТА (17:00 - 19:00)
-        const triKotaSchedule = [
-            { id: 'uBNy9r6X5GI', duration: 3777, title: 'Три кота — Самый большой сборник (Часть 1)' },
-            { id: 'BiDUGLoI90w', duration: 3841, title: 'Три кота — Самый большой сборник (Часть 2)' }
-        ];
-
-        // 5. ТЕХНИЧЕСКИЙ ПЕРЕРЫВ (20:00 - 21:00)
-        const techBreakSchedule = [
-            { id: '5qap5aO4i9A', duration: 3600, title: 'Технический перерыв // Музыкальная пауза (No Copyright)' }
-        ];
-
-        // 6. Блок ЛУНТИКА (21:00 - 21:55)
-        const luntikSchedule = [
-            { id: 'S7wU96O-C9Y', duration: 3300, title: 'Лунтик и его друзья — Вечерний сборник' }
-        ];
-
-        // 7. Настроечные ТВ-полосы (21:55 - 22:00)
-        const tvLinesSchedule = [
-            { id: 'XstLg_D038U', duration: 300, title: 'Технический перерыв перед отключением вещания' }
-        ];
-
-        // 8. ПЕТЯ И ВОЛК (Для всех остальных свободных часов, включая 11:00-12:00, 16:00-17:00, 19:00-20:00)
-        const defaultSchedule = [
-            { id: '9ZOzKUrzcPk', duration: 5642, title: 'Приключения Пети и Волка — Сборник серий' }
-        ];
+        // Считаем общую длину марафона в секундах
+        const totalMarathonDuration = marathonPlaylist.reduce((sum, item) => sum + item.duration, 0);
 
         function runLiveTv() {
             const player = document.getElementById('main-player');
@@ -163,11 +132,11 @@
             const staticScreen = document.getElementById('static-screen');
             
             const now = new Date();
-            const currentHour = now.getHours(); 
+            const currentHour = now.getHours();
             const currentMinute = now.getMinutes();
-            const secondsToday = (now.getHours() * 3600) + (now.getMinutes() * 60) + now.getSeconds();
-
-            // Полное ночное отключение эфира (с 22:01 до 07:59)
+            const currentSecond = now.getSeconds();
+            
+            // 1. Ночное отключение эфира (с 22:01 до 07:59)
             if (currentHour >= 22 || currentHour < 8) {
                 player.src = "";
                 player.dataset.currentId = "";
@@ -180,52 +149,8 @@
             tvWrapper.style.display = "block";
             staticScreen.style.display = "none";
 
-            let activePlaylist = [];
-            let currentLoopSecond = 0;
-
-            // Распределение по временным зонам
-            if (currentHour >= 8 && currentHour < 11) {
-                activePlaylist = smesharikiSchedule;
-                const secondsSinceStart = ((currentHour - 8) * 3600) + (now.getMinutes() * 60) + now.getSeconds();
-                currentLoopSecond = secondsSinceStart % activePlaylist.reduce((sum, item) => sum + item.duration, 0);
-            } 
-            else if (currentHour >= 12 && currentHour < 14) {
-                activePlaylist = fiksikiSchedule;
-                const secondsSinceStart = ((currentHour - 12) * 3600) + (now.getMinutes() * 60) + now.getSeconds();
-                currentLoopSecond = secondsSinceStart % activePlaylist.reduce((sum, item) => sum + item.duration, 0);
-            } 
-            else if (currentHour >= 14 && currentHour < 16) {
-                activePlaylist = prostokvashinoSchedule;
-                const secondsSinceStart = ((currentHour - 14) * 3600) + (now.getMinutes() * 60) + now.getSeconds();
-                currentLoopSecond = secondsSinceStart % activePlaylist.reduce((sum, item) => sum + item.duration, 0);
-            } 
-            else if (currentHour >= 17 && currentHour < 19) {
-                activePlaylist = triKotaSchedule;
-                const secondsSinceStart = ((currentHour - 17) * 3600) + (now.getMinutes() * 60) + now.getSeconds();
-                currentLoopSecond = secondsSinceStart % activePlaylist.reduce((sum, item) => sum + item.duration, 0);
-            } 
-            else if (currentHour >= 20 && currentHour < 21) {
-                activePlaylist = techBreakSchedule;
-                const secondsSinceStart = ((currentHour - 20) * 3600) + (now.getMinutes() * 60) + now.getSeconds();
-                currentLoopSecond = secondsSinceStart % activePlaylist.reduce((sum, item) => sum + item.duration, 0);
-            } 
-            else if (currentHour === 21 && currentMinute < 55) {
-                activePlaylist = luntikSchedule;
-                const secondsSinceStart = (now.getMinutes() * 60) + now.getSeconds();
-                currentLoopSecond = secondsSinceStart % activePlaylist.reduce((sum, item) => sum + item.duration, 0);
-            }
-            else if (currentHour === 21 && currentMinute >= 55) {
-                activePlaylist = tvLinesSchedule;
-                const secondsSinceStart = ((now.getMinutes() - 55) * 60) + now.getSeconds();
-                currentLoopSecond = secondsSinceStart % activePlaylist.reduce((sum, item) => sum + item.duration, 0);
-            }
-            else {
-                activePlaylist = defaultSchedule;
-                currentLoopSecond = secondsToday % activePlaylist.reduce((sum, item) => sum + item.duration, 0);
-            }
-
-            // Ровно в начале каждого нового часа (в 17:00, 20:00, 21:00) пускаем твою заставку на 11 секунд!
-            if (currentMinute === 0 && now.getSeconds() < 11) {
+            // 2. В первые 11 секунд абсолютно каждого нового часа запускаем твою заставку!
+            if (currentMinute === 0 && currentSecond < 11) {
                 const introLink = 'https://www.' + 'youtube' + '.com/embed/' + myIntroID + '?autoplay=1&mute=1&controls=0&rel=0';
                 if (player.dataset.currentId !== myIntroID) {
                     player.src = introLink;
@@ -235,9 +160,37 @@
                 return;
             }
 
+            // 3. Расчет текущей секунды эфира внутри марафона Смешариков (относительно начала дня вещания)
+            const totalSecondsToday = (currentHour * 3600) + (currentMinute * 60) + currentSecond;
+            const currentLoopSecond = totalSecondsToday % totalMarathonDuration;
+
             let elapsedTime = 0;
-            let currentVideo = activePlaylist;
+            let currentVideo = marathonPlaylist;
             let startSeconds = 0;
 
-            for (let i = 0; i < activePlaylist.length; i++) {
-                if (currentLoopSecond >= elapsedTime && currentLoopSecond < elapsedTime + activePlaylist[i].duration) {
+            for (let i = 0; i < marathonPlaylist.length; i++) {
+                if (currentLoopSecond >= elapsedTime && currentLoopSecond < elapsedTime + marathonPlaylist[i].duration) {
+                    currentVideo = marathonPlaylist[i];
+                    startSeconds = Math.floor(currentLoopSecond - elapsedTime);
+                    break;
+                }
+                elapsedTime += marathonPlaylist[i].duration;
+            }
+
+            const youtubeEmbedLink = 'https://www.' + 'youtube' + '.com/embed/' + currentVideo.id + 
+                                     '?autoplay=1&mute=1&controls=0&rel=0&start=' + startSeconds;
+
+            if (player.dataset.currentId !== currentVideo.id) {
+                player.src = youtubeEmbedLink;
+                player.dataset.currentId = currentVideo.id;
+                subtitle.innerText = "В эфире: " + currentVideo.title;
+            }
+        }
+
+        runLiveTv();
+        // Ежесекундная проверка для точности таймингов заставки
+        setInterval(runLiveTv, 1000);
+    </script>
+
+</body>
+</html>
