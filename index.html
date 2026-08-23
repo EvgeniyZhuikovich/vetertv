@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ветер ТВ — Барбоскины Эфир</title>
+    <title>Ветер ТВ — Прямой Эфир</title>
     <style>
         body {
             margin: 0;
@@ -40,16 +40,15 @@
             margin-top: 6px;
         }
 
-        .player-wrapper {
+        .player-container {
+            position: relative;
             box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
             border-radius: 16px;
             overflow: hidden;
             border: 3px solid #232936;
             background: #000;
-            line-height: 0;
             width: 800px;
             height: 450px;
-            margin-bottom: 20px;
         }
 
         iframe {
@@ -58,35 +57,37 @@
             border: none;
         }
 
-        .controls {
-            display: flex;
-            gap: 15px;
+        .player-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: calc(100% - 40px);
+            background: rgba(0,0,0,0);
+            z-index: 10;
         }
 
-        .btn {
-            background: #232936;
-            color: #fff;
-            border: 2px solid #3a7bd5;
-            padding: 12px 24px;
-            font-size: 16px;
-            font-weight: 600;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
+        /* Экран профилактики / ночного отключения */
+        .off-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 800px;
+            height: 450px;
+            background: #0d0f13;
+            border-radius: 16px;
+            border: 3px dashed #3a7bd5;
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.8);
         }
 
-        .btn:hover {
-            background: #3a7bd5;
-            box-shadow: 0 0 15px rgba(58, 123, 213, 0.4);
-        }
-
-        .btn-start {
-            border-color: #00d2ff;
-        }
-        .btn-start:hover {
-            background: #00d2ff;
-            color: #11141a;
-            box-shadow: 0 0 15px rgba(0, 210, 255, 0.4);
+        .off-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: #6c7a9c;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-align: center;
         }
     </style>
 </head>
@@ -94,63 +95,152 @@
 
     <div class="channel-header">
         <h1 class="channel-title">Ветер ТВ</h1>
-        <div id="tv-subtitle" class="channel-subtitle">Нажмите кнопку ниже, чтобы запустить телеканал</div>
+        <div id="tv-subtitle" class="channel-subtitle">Синхронизация эфира...</div>
     </div>
 
-    <div class="player-wrapper">
-        <iframe 
-            id="main-player"
-            allow="autoplay; encrypted-media" 
-            allowfullscreen>
-        </iframe>
+    <!-- Основной рабочий плеер -->
+    <div id="tv-wrapper" class="player-container">
+        <div class="player-overlay"></div>
+        <iframe id="main-player" allow="autoplay; encrypted-media" allowfullscreen></iframe>
     </div>
 
-    <div class="controls">
-        <!-- Главная кнопка старта эфира -->
-        <button class="btn btn-start" onclick="startTv()">▶ Включить Ветер ТВ</button>
-        <!-- Кнопка переключения заставки -->
-        <button class="btn btn-intro" onclick="toggleStream()" style="display: none;">Включить заставку канала</button>
+    <!-- Заглушка ночного отключения -->
+    <div id="static-screen" class="off-screen">
+        <div class="off-text">🌙 Вещание окончено<br><span style="font-size: 14px; font-weight: 400; color: #434b5e; margin-top: 10px; display: block;">Эфир возобновится в 08:00</span></div>
     </div>
 
     <script>
-        const site = 'https://www.' + 'youtube' + '.com/embed/';
-        const cartoonID = 'AlR0fQsm83Y'; // Барбоскины
-        const introID = '9bZkp7q19f0';   // Заставка
-        
-        let isIntro = false;
-        let isStarted = false;
-        const player = document.getElementById('main-player');
-        const subtitle = document.getElementById('tv-subtitle');
+        // Программные блоки мультфильмов
+        const smesharikiSchedule = [
+            { id: 'AlR0fQsm83Y', duration: 5234, title: 'Смешарики. Начало (Полнометражный)' },
+            { id: 'rXtaU_yitlQ', duration: 4210, title: 'Смешарики 2D — Большой сборник' }
+        ];
 
-        // Функция первого включения телевизора
-        function startTv() {
-            player.src = site + cartoonID + '?rel=0'; // Без автоплея, чистое включение по клику
-            subtitle.innerText = "В эфире: Смешарики ";
+        const fiksikiSchedule = [
+            { id: 'V8Er1uk4fcw', duration: 3650, title: 'Фиксики — Огромный сборник серий' }
+        ];
+
+        const prostokvashinoSchedule = [
+            { id: 'OWbXv_2Y_f8', duration: 7329, title: 'Новое Простоквашино — Все серии подряд' }
+        ];
+
+        const triKotaSchedule = [
+            { id: 'Z96kS4_pXQ0', duration: 7200, title: 'Три кота — Большой праздничный сборник' }
+        ];
+
+        const techBreakSchedule = [
+            { id: '5qap5aO4i9A', duration: 3600, title: 'Технический перерыв // Музыкальная пауза (No Copyright)' }
+        ];
+
+        const luntikSchedule = [
+            { id: 'S7wU96O-C9Y', duration: 3300, title: 'Лунтик и его друзья — Вечерний сборник' }
+        ];
+
+        // Настроечные ТВ-полосы (21:55 - 22:00)
+        const tvLinesSchedule = [
+            { id: 'XstLg_D038U', duration: 300, title: 'Технический перерыв перед отключением вещания' }
+        ];
+
+        // Межпрограммный фоновый эфир для остальных «окон»
+        const defaultSchedule = [
+            { id: 'pOWbR8Lt2Fk', duration: 4325, title: 'Легендарные Мультфильмы 2010-2015' },
+            { id: '9bZkp7q19f0', duration: 180,  title: 'Фирменная заставка Ветер ТВ' }
+        ];
+
+        function runLiveTv() {
+            const player = document.getElementById('main-player');
+            const subtitle = document.getElementById('tv-subtitle');
+            const tvWrapper = document.getElementById('tv-wrapper');
+            const staticScreen = document.getElementById('static-screen');
             
-            // Показываем кнопку заставки и прячем кнопку старта
-            document.querySelector('.btn-intro').style.display = 'inline-block';
-            document.querySelector('.btn-start').style.display = 'none';
-            isStarted = true;
-        }
+            const now = new Date();
+            const currentHour = now.getHours(); 
+            const currentMinute = now.getMinutes();
+            const secondsToday = (now.getHours() * 3600) + (now.getMinutes() * 60) + now.getSeconds();
 
-        // Переключение между мультфильмом и заставкой
-        function toggleStream() {
-            if (!isStarted) return;
-            const button = document.querySelector('.btn-intro');
+            // 1. Полное ночное отключение эфира (с 22:01 до 07:59)
+            if (currentHour >= 22 || currentHour < 8) {
+                // Прячем плеер, показываем настроечный экран профилактики
+                player.src = "";
+                player.dataset.currentId = "";
+                tvWrapper.style.display = "none";
+                staticScreen.style.display = "flex";
+                subtitle.innerText = "Телеканал отключен до утра";
+                return;
+            }
 
-            if (!isIntro) {
-                player.src = site + introID + '?rel=0';
-                subtitle.innerText = "В эфире: Фирменная заставка Ветер ТВ";
-                button.innerText = "Вернуть мультфильм";
-                isIntro = true;
-            } else {
-                player.src = site + cartoonID + '?rel=0';
-                subtitle.innerText = "В эфире: Барбоскины (Выпуск 1)";
-                button.innerText = "Включить заставку канала";
-                isIntro = false;
+            // Если эфир активен, возвращаем плеер на место
+            tvWrapper.style.display = "block";
+            staticScreen.style.display = "none";
+
+            let activePlaylist = [];
+            let currentLoopSecond = 0;
+
+            // 2. Распределение по временным зонам
+            if (currentHour >= 8 && currentHour < 11) {
+                activePlaylist = smesharikiSchedule;
+                const secondsSinceStart = ((currentHour - 8) * 3600) + (now.getMinutes() * 60) + now.getSeconds();
+                currentLoopSecond = secondsSinceStart % activePlaylist.reduce((sum, item) => sum + item.duration, 0);
+            } 
+            else if (currentHour >= 12 && currentHour < 14) {
+                activePlaylist = fiksikiSchedule;
+                const secondsSinceStart = ((currentHour - 12) * 3600) + (now.getMinutes() * 60) + now.getSeconds();
+                currentLoopSecond = secondsSinceStart % activePlaylist.reduce((sum, item) => sum + item.duration, 0);
+            } 
+            else if (currentHour >= 14 && currentHour < 16) {
+                activePlaylist = prostokvashinoSchedule;
+                const secondsSinceStart = ((currentHour - 14) * 3600) + (now.getMinutes() * 60) + now.getSeconds();
+                currentLoopSecond = secondsSinceStart % activePlaylist.reduce((sum, item) => sum + item.duration, 0);
+            } 
+            else if (currentHour >= 17 && currentHour < 19) {
+                activePlaylist = triKotaSchedule;
+                const secondsSinceStart = ((currentHour - 17) * 3600) + (now.getMinutes() * 60) + now.getSeconds();
+                currentLoopSecond = secondsSinceStart % activePlaylist.reduce((sum, item) => sum + item.duration, 0);
+            } 
+            else if (currentHour >= 20 && currentHour < 21) {
+                activePlaylist = techBreakSchedule;
+                const secondsSinceStart = ((currentHour - 20) * 3600) + (now.getMinutes() * 60) + now.getSeconds();
+                currentLoopSecond = secondsSinceStart % activePlaylist.reduce((sum, item) => sum + item.duration, 0);
+            } 
+            else if (currentHour === 21 && currentMinute < 55) {
+                // Лунтик идет с 21:00 до 21:54:59
+                activePlaylist = luntikSchedule;
+                const secondsSinceStart = (now.getMinutes() * 60) + now.getSeconds();
+                currentLoopSecond = secondsSinceStart % activePlaylist.reduce((sum, item) => sum + item.duration, 0);
+            }
+            else if (currentHour === 21 && currentMinute >= 55) {
+                // ТВ Полосы включаются ровно в 21:55 и идут до 22:00
+                activePlaylist = tvLinesSchedule;
+                const secondsSinceStart = ((now.getMinutes() - 55) * 60) + now.getSeconds();
+                currentLoopSecond = secondsSinceStart % activePlaylist.reduce((sum, item) => sum + item.duration, 0);
+            }
+            else {
+                activePlaylist = defaultSchedule;
+                currentLoopSecond = secondsToday % activePlaylist.reduce((sum, item) => sum + item.duration, 0);
+            }
+
+            let elapsedTime = 0;
+            let currentVideo = activePlaylist;
+            let startSeconds = 0;
+
+            for (let i = 0; i < activePlaylist.length; i++) {
+                if (currentLoopSecond >= elapsedTime && currentLoopSecond < elapsedTime + activePlaylist[i].duration) {
+                    currentVideo = activePlaylist[i];
+                    startSeconds = Math.floor(currentLoopSecond - elapsedTime);
+                    break;
+                }
+                elapsedTime += activePlaylist[i].duration;
+            }
+
+            const youtubeEmbedLink = 'https://www.' + 'youtube' + '.com/embed/' + currentVideo.id + 
+                                     '?autoplay=1&mute=1&controls=0&rel=0&start=' + startSeconds;
+
+            if (player.dataset.currentId !== currentVideo.id) {
+                player.src = youtubeEmbedLink;
+                player.dataset.currentId = currentVideo.id;
+                subtitle.innerText = "В эфире: " + currentVideo.title;
             }
         }
-    </script>
 
-</body>
-</html>
+        runLiveTv();
+        setInterval(runLiveTv, 15000); // Проверяем сетку чаще (каждые 15 секунд), чтобы точнее поймать тайминги
