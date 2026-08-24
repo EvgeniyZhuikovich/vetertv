@@ -124,7 +124,7 @@
 
     <!-- КНОПКИ УПРАВЛЕНИЯ -->
     <div class="controls">
-        <button class="btn" onclick="toggleMute()">🔇 Включить звук</button>
+        <button id="mute-btn" class="btn" onclick="toggleMute()">🔇 Включить звук</button>
         <button class="btn" onclick="goFullscreen()">📺 Во весь экран</button>
     </div>
 
@@ -148,12 +148,15 @@
 
         let playerIframe = document.getElementById('tv-player');
         let statusBlock = document.getElementById('status-text');
+        let currentVideoID = myIntroID; // Следим за тем, какое видео играет прямо сейчас
         let isMuted = true;
         let currentTrackIndex = 0;
 
         function startBroadcast() {
             if (statusBlock) statusBlock.innerText = "В эфире: Фирменная заставка Ветер ТВ";
-            // ТУТ ИСПРАВЛЕНО: Добавлен правильный путь /embed/ для заставки
+            currentVideoID = myIntroID;
+            
+            // Запускаем заставку с правильным адресом
             playerIframe.src = "https://youtube.com" + myIntroID + "?autoplay=1&mute=" + (isMuted ? 1 : 0);
             
             // Ровно 10 секунд заставки
@@ -166,6 +169,7 @@
             if (index >= marathonPlaylist.length) index = 0; 
             currentTrackIndex = index;
             let movie = marathonPlaylist[index];
+            currentVideoID = movie.id; // Запоминаем новый ID мультика
             
             if (statusBlock) statusBlock.innerText = "В эфире: " + movie.title + " 🍿";
             playerIframe.src = "https://youtube.com" + movie.id + "?autoplay=1&mute=" + (isMuted ? 1 : 0);
@@ -175,20 +179,22 @@
             }, movie.duration * 1000);
         }
 
+        // ПОЛНОСТЬЮ ОБНОВЛЕННАЯ БЕЗОПАСНАЯ ФУНКЦИЯ ЗВУКА
         function toggleMute() {
-            let btn = document.querySelector('.btn');
-            if (isMuted) {
-                playerIframe.src = playerIframe.src.replace('mute=1', 'mute=0');
+            let btn = document.getElementById('mute-btn');
+            isMuted = !isMuted; // Переключаем режим звука
+            
+            if (!isMuted) {
                 btn.innerHTML = "🔊 Выключить звук";
-                isMuted = false;
             } else {
-                playerIframe.src = playerIframe.src.replace('mute=0', 'mute=1');
                 btn.innerHTML = "🔇 Включить звук";
-                isMuted = true;
             }
+            
+            // Пересобираем ссылку с нуля на основе текущего ID видео. 
+            // Это на 100% защищает от склеивания букв и поломки IP-адресов!
+            playerIframe.src = "https://youtube.com" + currentVideoID + "?autoplay=1&mute=" + (isMuted ? 1 : 0);
         }
 
-        // Кнопка во весь экран
         function goFullscreen() {
             let container = document.querySelector('.player-container');
             if (container.requestFullscreen) container.requestFullscreen();
@@ -197,7 +203,6 @@
             else if (container.msRequestFullscreen) container.msRequestFullscreen();
         }
 
-        // Обновление онлайна
         function simulateOnline() {
             let counter = document.getElementById('online-counter');
             if (!counter) return;
