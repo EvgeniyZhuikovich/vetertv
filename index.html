@@ -14,53 +14,77 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             min-height: 100vh;
         }
 
         h1 {
             color: #58a6ff;
+            margin-top: 20px;
             margin-bottom: 5px;
-            font-size: 32px;
+            font-size: 28px;
             text-transform: uppercase;
             letter-spacing: 2px;
         }
 
         .sub-title {
             color: #8b949e;
-            font-size: 14px;
-            margin-bottom: 40px;
+            font-size: 13px;
+            margin-bottom: 25px;
             font-weight: 500;
         }
 
-        /* Большая неоновая кнопка запуска ТВ */
-        .play-tv-btn {
-            display: inline-block;
-            background-color: #e50914;
-            color: #ffffff;
-            text-decoration: none;
-            padding: 20px 40px;
-            font-size: 20px;
-            font-weight: bold;
-            border-radius: 50px;
-            box-shadow: 0 0 25px rgba(229, 9, 20, 0.7);
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 50px;
-            border: 2px solid #ff3333;
+        .player-container {
+            position: relative;
+            width: 90%;
+            max-width: 854px;
+            aspect-ratio: 16 / 9;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid #21262d;
         }
 
-        .play-tv-btn:hover {
-            transform: scale(1.05);
-            background-color: #ff1e27;
-            box-shadow: 0 0 35px rgba(229, 9, 20, 0.9);
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            background-color: #21262d;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background-color: #30363d;
+            border-color: #8b949e;
+            color: #ffffff;
         }
 
         .footer-block {
             width: 90%;
             max-width: 854px;
             text-align: center;
+            margin-bottom: 40px;
         }
 
         .counter-box {
@@ -91,15 +115,21 @@
 <body>
 
     <h1>ВЕТЕР ТВ</h1>
-    <div class="sub-title">Официальный сайт телеканала</div>
+    <div class="sub-title" id="status-text">В эфире: Смешарики Марафон 🍿</div>
 
-    <!-- ГЛАВНАЯ КНОПКА ВКЛЮЧЕНИЯ ТЕЛЕВИЗОРА -->
-    <!-- Замени ссылку ниже на прямую ссылку своего Ютуб-канала или плейлиста со Смешариками -->
-    <a href="https://youtube.com" target="_blank" class="play-tv-btn">
-        🔴 ЗАПУСТИТЬ ЭФИР (YOUTUBE)
-    </a>
+    <!-- КОНТЕЙНЕР ПЛЕЕРА -->
+    <div class="player-container">
+        <!-- Твой плеер, в который сразу встроен весь плейлист из твоих 4 фильмов. Они будут играть друг за другом по кругу сами! -->
+        <iframe id="tv-player" src="https://youtube.com" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    </div>
 
-    <!-- ЧИСТЫЙ СЧЕТЧИК ОНЛАЙНА -->
+    <!-- КНОПКИ УПРАВЛЕНИЯ -->
+    <div class="controls">
+        <button id="mute-btn" class="btn" onclick="toggleMute()">🔇 Включить звук</button>
+        <button class="btn" onclick="goFullscreen()">📺 Во весь экран</button>
+    </div>
+
+    <!-- СЧЕТЧИК ОНЛАЙНА -->
     <div class="footer-block">
         <div class="counter-box">
             <p class="counter-title">🔴 СЕЙЧАС СМОТРЯТ ВЕТЕР ТВ:</p>
@@ -108,12 +138,39 @@
     </div>
 
     <script>
-        // Скрипт живого онлайна
+        let playerIframe = document.getElementById('tv-player');
+        let isMuted = true;
+
+        // Безопасная функция звука на основе готового плейлиста
+        function toggleMute() {
+            let btn = document.getElementById('mute-btn');
+            isMuted = !isMuted;
+            
+            if (!isMuted) {
+                playerIframe.src = playerIframe.src.replace('mute=1', 'mute=0');
+                btn.innerHTML = "🔊 Выключить звук";
+            } else {
+                playerIframe.src = playerIframe.src.replace('mute=0', 'mute=1');
+                btn.innerHTML = "🔇 Включить звук";
+                isMuted = true;
+            }
+        }
+
+        // Кнопка во весь экран
+        function goFullscreen() {
+            let container = document.querySelector('.player-container');
+            if (container.requestFullscreen) container.requestFullscreen();
+            else if (container.mozRequestFullScreen) container.mozRequestFullScreen();
+            else if (container.webkitRequestFullscreen) container.webkitRequestFullscreen();
+            else if (container.msRequestFullscreen) container.msRequestFullscreen();
+        }
+
+        // Обновление онлайна
         function simulateOnline() {
             let counter = document.getElementById('online-counter');
             if (!counter) return;
             let current = parseInt(counter.innerText);
-            let change = Math.floor(Math.random() * 3) - 1; // -1, 0 или +1
+            let change = Math.floor(Math.random() * 3) - 1;
             let newOnline = current + change;
             if (newOnline < 1) newOnline = 1;
             if (newOnline > 5) newOnline = 4;
