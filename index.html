@@ -75,7 +75,8 @@
     </div>
 
     <div class="controls">
-        <button class="btn" id="muteBtn">🔊 Выключить звук</button>
+        <!-- Меняем стартовый текст на Включить, так как видео начнется без звука -->
+        <button class="btn" id="muteBtn">🔇 Включить звук</button>
         <button class="btn" id="fullscreenBtn">📺 Полный экран</button>
     </div>
 
@@ -88,7 +89,6 @@
     <script src="https://youtube.com"></script>
 
     <script>
-        // Твоя конфигурация Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyDs1PGAs9PlAifxph8FZYjjLrkwvttLTxE",
             authDomain: "://firebaseapp.com",
@@ -99,7 +99,6 @@
             appId: "1:295503050789:web:4627c77bb0d7549da0e7cc"
         };
         
-        // Старт базы данных для счетчика
         try {
             firebase.initializeApp(firebaseConfig);
             const database = firebase.database();
@@ -118,11 +117,9 @@
                 document.getElementById('onlineCount').textContent = count || 1;
             });
         } catch(e) {
-            console.log("Ошибка базы данных.");
             document.getElementById('onlineCount').textContent = "1";
         }
 
-        // Плееры YouTube и Сетка вещания
         let mainPlayer, introPlayer, isIntroPlaying = false;
         const playlist = [
             { id: 'AlR0fQsm83Y', title: 'Смешарики. Начало', duration: 5400 },
@@ -148,12 +145,16 @@
             const live = getLiveVideo();
             mainPlayer = new YT.Player('player', {
                 height: '480', width: '100%', videoId: live.id, 
-                playerVars: { 'controls': 0, 'disablekb': 1, 'rel': 0, 'modestbranding': 1, 'iv_load_policy': 3, 'start': live.startSeconds },
+                playerVars: { 
+                    'controls': 0, 'disablekb': 1, 'rel': 0, 'modestbranding': 1, 'iv_load_policy': 3, 
+                    'start': live.startSeconds,
+                    'mute': 1 // ВКЛЮЧАЕМ MUTE ДЛЯ ОБХОДА БЛОКИРОВКИ БРАУЗЕРА
+                },
                 events: { 'onReady': onMainPlayerReady, 'onStateChange': onMainPlayerStateChange }
             });
             introPlayer = new YT.Player('introPlayer', {
                 height: '480', width: '100%', videoId: 'UbY3QIM69Ho', 
-                playerVars: { 'controls': 0, 'disablekb': 1, 'rel': 0, 'modestbranding': 1, 'iv_load_policy': 3 }
+                playerVars: { 'controls': 0, 'disablekb': 1, 'rel': 0, 'modestbranding': 1, 'iv_load_policy': 3, 'mute': 1 }
             });
             document.getElementById('currentTrack').textContent = 'Сейчас в эфире: ' + live.title;
         }
@@ -161,7 +162,6 @@
         function onMainPlayerReady(event) {
             event.target.playVideo();
             
-            // Логика переключения текста на кнопке звука
             document.getElementById('muteBtn').addEventListener('click', function() {
                 if (mainPlayer.isMuted()) {
                     mainPlayer.unMute();
