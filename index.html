@@ -36,7 +36,6 @@
         @keyframes blink { 50% { opacity: 0.5; } }
         .subtitle { font-size: 1.2rem; color: #94a3b8; margin-bottom: 25px; font-weight: 500; }
         
-        /* Фиксированное окно, которое не исчезнет */
         .video-container {
             position: relative;
             width: 850px;
@@ -50,7 +49,6 @@
         }
         .video-mask { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 30; background: transparent; }
         
-        /* Размеры для самого плеера внутри окна */
         iframe, #player, #introPlayer { width: 100% !important; height: 480px !important; border: none; display: block; }
         
         #intro-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; display: none; background: #000; }
@@ -67,8 +65,6 @@
         }
         .online-number { color: #22c55e; font-weight: bold; text-shadow: 0 0 10px rgba(34, 197, 94, 0.2); }
     </style>
-    <!-- Безотказная мгновенная загрузка YouTube API -->
-    <script src="https://youtube.com"></script>
 </head>
 <body>
 
@@ -91,7 +87,7 @@
         • Онлайн: <span class="online-number" id="onlineCount">Загрузка...</span> чел.
     </div>
 
-    <!-- Библиотеки Firebase -->
+    <!-- Сначала подключаем Firebase -->
     <script src="https://gstatic.com"></script>
     <script src="https://gstatic.com"></script>
 
@@ -127,6 +123,7 @@
             document.getElementById('onlineCount').textContent = "1";
         }
 
+        // Логика ТВ-расписания
         let mainPlayer, introPlayer, isIntroPlaying = false;
         const playlist = [
             { id: 'AlR0fQsm83Y', title: 'Смешарики. Начало', duration: 5400 },
@@ -148,13 +145,14 @@
             return { index: 0, id: playlist.id, title: playlist.title, startSeconds: 0 };
         }
 
+        // Эта функция вызовется автоматически, когда загрузится скрипт YouTube в самом низу
         function onYouTubeIframeAPIReady() {
             const live = getLiveVideo();
             mainPlayer = new YT.Player('player', {
                 height: '480', width: '100%', videoId: live.id, 
                 playerVars: { 
                     'controls': 0, 'disablekb': 1, 'rel': 0, 'modestbranding': 1, 'iv_load_policy': 3, 
-                    'start': live.startSeconds, 'mute': 1
+                    'start': live.startSeconds, 'mute': 1, 'autoplay': 1
                 },
                 events: { 'onReady': onMainPlayerReady, 'onStateChange': onMainPlayerStateChange }
             });
@@ -166,7 +164,6 @@
         }
 
         function onMainPlayerReady(event) {
-            // Браузеры требуют сначала запустить видео без звука. Видео начнет проигрываться само.
             event.target.playVideo();
 
             document.getElementById('muteBtn').addEventListener('click', function() {
@@ -188,6 +185,7 @@
             setInterval(checkIntroTiming, 1000);
         }
 
+        function onPlayerStateChange(event) { if (event.data === YT.PlayerState.ENDED) checkAndSwitchBroadcast(); }
         function onMainPlayerStateChange(event) { if (event.data === YT.PlayerState.ENDED) checkAndSwitchBroadcast(); }
 
         function checkAndSwitchBroadcast() {
@@ -226,5 +224,6 @@
 
         setInterval(checkAndSwitchBroadcast, 5000);
     </script>
-</body>
-</html>
+
+    <!-- СКРИПТ YOUTUBE ПОДКЛЮЧАЕМ В САМОМ КОНЦЕ СТРАНИЦЫ ДЛЯ ГАРАНТИРОВАННОГО ЗАПУСКА -->
+    <script src="https://youtube.com"></script>
