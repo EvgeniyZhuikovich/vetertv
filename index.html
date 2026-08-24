@@ -51,19 +51,19 @@
         
         iframe { width: 100% !important; height: 480px !important; border: none; display: block; }
         
-        /* Автоматическое растягивание элементов при fullscreenDisplay */
-        .video-container:fullscreen iframe,
-        .video-container:fullscreen .video-mask,
-        .video-container:-webkit-full-screen iframe,
-        .video-container:-webkit-full-screen .video-mask,
-        .video-container:-moz-full-screen iframe,
-        .video-container:-moz-full-screen .video-mask,
-        .video-container:-ms-fullscreen iframe,
-        .video-container:-ms-fullscreen .video-mask {
-            width: 100vw !important;
-            height: 100vh !important;
-        }
-
+/* Жесткое растягивание самого видео на весь экран без черных полос */
+.video-container:fullscreen iframe,
+.video-container:fullscreen .video-mask,
+.video-container:-webkit-full-screen iframe,
+.video-container:-webkit-full-screen .video-mask,
+.video-container:-moz-full-screen iframe,
+.video-container:-moz-full-screen .video-mask,
+.video-container:-ms-fullscreen iframe,
+.video-container:-ms-fullscreen .video-mask {
+    width: 100vw !important;
+    height: 100vh !important;
+    object-fit: cover !important; /* Убирает черные поля, масштабируя видео под экран */
+}
         .controls { margin-top: 20px; display: flex; justify-content: center; gap: 15px; }
         .btn {
             background-color: #0284c7; color: white; border: none; padding: 12px 24px;
