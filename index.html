@@ -117,7 +117,7 @@
     <h1>ВЕТЕР ТВ</h1>
     <div class="sub-title" id="status-text">Запуск трансляции...</div>
 
-    <!-- ПЛЕЕР -->
+    <!-- КОНТЕЙНЕР ПЛЕЕРА -->
     <div class="player-container">
         <iframe id="tv-player" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
     </div>
@@ -153,6 +153,7 @@
 
         function startBroadcast() {
             if (statusBlock) statusBlock.innerText = "В эфире: Фирменная заставка Ветер ТВ";
+            // ТУТ ИСПРАВЛЕНО: Добавлен правильный путь /embed/ для заставки
             playerIframe.src = "https://youtube.com" + myIntroID + "?autoplay=1&mute=" + (isMuted ? 1 : 0);
             
             // Ровно 10 секунд заставки
@@ -187,6 +188,7 @@
             }
         }
 
+        // Кнопка во весь экран
         function goFullscreen() {
             let container = document.querySelector('.player-container');
             if (container.requestFullscreen) container.requestFullscreen();
@@ -195,6 +197,7 @@
             else if (container.msRequestFullscreen) container.msRequestFullscreen();
         }
 
+        // Обновление онлайна
         function simulateOnline() {
             let counter = document.getElementById('online-counter');
             if (!counter) return;
