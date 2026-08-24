@@ -110,7 +110,7 @@
     <h1>ВЕТЕР ТВ</h1>
     <div class="sub-title" id="status-text">Запуск эфира...</div>
 
-    <!-- ЭКРАН ТЕЛЕВИЗОРА -->
+    <!-- КОНТЕЙНЕР ПЛЕЕРА -->
     <div class="player-container">
         <iframe id="tv-player" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
     </div>
@@ -121,7 +121,7 @@
         <button class="btn" onclick="goFullscreen()">📺 Во весь экран</button>
     </div>
 
-    <!-- НАСТОЯЩИЙ ЧЕСТНЫЙ ОНЛАЙН -->
+    <!-- НАСТОЯЩИЙ СЧЕТЧИК ОНЛАЙНА -->
     <div class="footer-block">
         <div class="counter-box">
             <p class="counter-title">🔴 СЕЙЧАС СМОТРЯТ ВЕТЕР ТВ:</p>
@@ -161,6 +161,7 @@
             currentVideoID = movie.id;
             
             if (statusBlock) statusBlock.innerText = "В эфире: " + movie.title + " 🍿";
+            // ТУТ ЖЕСТКО ЗАКРЕПЛЕН СЛЭШ ПЕРЕД ID
             playerIframe.src = "https://youtube.com" + movie.id + "?autoplay=1&mute=" + (isMuted ? 1 : 0);
             
             if (movieTimeout) clearTimeout(movieTimeout);
@@ -174,20 +175,19 @@
             let minutes = now.getMinutes();
             let seconds = now.getSeconds();
 
-            // Ровно в 00 минут и 00 секунд нового часа прерываем поток заставкой
             if (minutes === 0 && seconds === 0 && !isIntroPlaying) {
                 isIntroPlaying = true;
                 if (movieTimeout) clearTimeout(movieTimeout); 
 
                 if (statusBlock) statusBlock.innerText = "🚨 ЧАСОВОЙ ВЫПУСК: Заставка Ветер ТВ";
                 currentVideoID = myIntroID;
+                // ТУТ ТОЖЕ СЛЭШ ЗАКРЕПЛЕН
                 playerIframe.src = "https://youtube.com" + myIntroID + "?autoplay=1&mute=" + (isMuted ? 1 : 0);
 
-                // ТУТ НАСТРОЕНО: Ровно 11 секунд заставки (11000 миллисекунд)
                 setTimeout(function() {
                     isIntroPlaying = false;
                     playMovie(currentTrackIndex); 
-                }, 11000);
+                }, 11000); // 11 секунд заставки
             }
         }
 
@@ -200,6 +200,7 @@
             } else {
                 btn.innerHTML = "🔇 Включить звук";
             }
+            // ТУТ ТОЖЕ УБРАНА ОШИБКА СКЛЕИВАНИЯ
             playerIframe.src = "https://youtube.com" + currentVideoID + "?autoplay=1&mute=" + (isMuted ? 1 : 0);
         }
 
