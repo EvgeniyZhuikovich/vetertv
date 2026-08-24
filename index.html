@@ -87,7 +87,7 @@
         • Онлайн: <span class="online-number" id="onlineCount">Загрузка...</span> чел.
     </div>
 
-    <!-- Сначала подключаем Firebase -->
+    <!-- Подключаем Firebase -->
     <script src="https://gstatic.com"></script>
     <script src="https://gstatic.com"></script>
 
@@ -123,8 +123,8 @@
             document.getElementById('onlineCount').textContent = "1";
         }
 
-        // Логика ТВ-расписания
-        let mainPlayer, introPlayer, isIntroPlaying = false;
+        // ТВ-расписание
+        let mainPlayer = null, introPlayer = null, isIntroPlaying = false, isPlayerReady = false;
         const playlist = [
             { id: 'AlR0fQsm83Y', title: 'Смешарики. Начало', duration: 5400 },
             { id: 'xfFu4P2FZZc', title: 'Смешарики. Легенда о золотом драконе', duration: 4790 },
@@ -142,10 +142,9 @@
                 }
                 timeInCycle -= playlist[i].duration;
             }
-            return { index: 0, id: playlist.id, title: playlist.title, startSeconds: 0 };
+            return { index: 0, id: playlist[i].id, title: playlist[i].title, startSeconds: 0 };
         }
 
-        // Эта функция вызовется автоматически, когда загрузится скрипт YouTube в самом низу
         function onYouTubeIframeAPIReady() {
             const live = getLiveVideo();
             mainPlayer = new YT.Player('player', {
@@ -164,14 +163,15 @@
         }
 
         function onMainPlayerReady(event) {
+            isPlayerReady = true; // Защита: плеер официально готов
             event.target.playVideo();
 
             document.getElementById('muteBtn').addEventListener('click', function() {
-                if (mainPlayer.isMuted()) {
+                if (mainPlayer && mainPlayer.isMuted && mainPlayer.isMuted()) {
                     mainPlayer.unMute();
                     introPlayer.unMute();
                     this.innerHTML = "🔊 Выключить звук";
-                } else {
+                } else if (mainPlayer && mainPlayer.mute) {
                     mainPlayer.mute();
                     introPlayer.mute();
                     this.innerHTML = "🔇 Включить звук";
@@ -185,11 +185,11 @@
             setInterval(checkIntroTiming, 1000);
         }
 
-        function onPlayerStateChange(event) { if (event.data === YT.PlayerState.ENDED) checkAndSwitchBroadcast(); }
         function onMainPlayerStateChange(event) { if (event.data === YT.PlayerState.ENDED) checkAndSwitchBroadcast(); }
 
         function checkAndSwitchBroadcast() {
-            if (isIntroPlaying) return;
+            if (isIntroPlaying || !isPlayerReady || !mainPlayer || !mainPlayer.getVideoUrl) return; // Жесткая проверка готовности
+            
             const live = getLiveVideo();
             const currentVideoUrl = mainPlayer.getVideoUrl();
             if (currentVideoUrl && !currentVideoUrl.includes(live.id)) {
@@ -199,8 +199,9 @@
         }
 
         function checkIntroTiming() {
+            if (!isPlayerReady || !mainPlayer || isIntroPlaying) return;
             const now = new Date();
-            if ((now.getMinutes() === 0 || now.getMinutes() === 30) && now.getSeconds() === 0 && !isIntroPlaying) {
+            if ((now.getMinutes() === 0 || now.getMinutes() === 30) && now.getSeconds() === 0) {
                 startIntroBreak();
             }
         }
@@ -222,8 +223,4 @@
             }, 11000);
         }
 
-        setInterval(checkAndSwitchBroadcast, 5000);
-    </script>
-
-    <!-- СКРИПТ YOUTUBE ПОДКЛЮЧАЕМ В САМОМ КОНЦЕ СТРАНИЦЫ ДЛЯ ГАРАНТИРОВАННОГО ЗАПУСКА -->
-    <script src="https://youtube.com"></script>
+        // Запускаем синхронизацию только через 3 секунды после старта, чтобы всё успело прогрузиться
