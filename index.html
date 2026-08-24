@@ -86,21 +86,18 @@
     <h1>ВЕТЕР ТВ</h1>
     <div class="sub-title" id="status-text">Запуск эфира...</div>
 
-    <!-- ЭКРАН ТЕЛЕВИЗОРА -->
     <div class="player-container">
         <iframe id="tv-player" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
     </div>
 
-    <!-- КНОПКИ УПРАВЛЕНИЯ -->
     <div class="controls">
         <button id="mute-btn" class="btn" onclick="toggleMute()">🔇 Включить звук</button>
         <button class="btn" onclick="goFullscreen()">📺 Во весь экран</button>
     </div>
 
     <script>
-        const introUrl = "https://youtube.com"; // Твоя заставка
+        const introUrl = "https://youtube.com"; 
         
-        // ВСЕ ТВОИ АЙДИШНИКИ ФИЛЬМОВ НА МЕСТЕ:
         const marathonPlaylist = [
             { link: "https://youtube.com", duration: 5234, title: 'Смешарики. Начало' },
             { link: "https://youtube.com", duration: 4920, title: 'Смешарики. Легенда о золотом драконе' },
@@ -110,7 +107,7 @@
 
         let playerIframe = document.getElementById('tv-player');
         let statusBlock = document.getElementById('status-text');
-        let currentLink = marathonPlaylist[0].link; 
+        let currentLink = ""; 
         let isMuted = true;
         let currentTrackIndex = 0;
         let isIntroPlaying = false;
@@ -143,7 +140,6 @@
             let minutes = now.getMinutes();
             let seconds = now.getSeconds();
 
-            // Ровно в 00 минут каждого часа прерывает заставкой на 11 секунд
             if (minutes === 0 && seconds === 0 && !isIntroPlaying) {
                 isIntroPlaying = true;
                 if (movieTimeout) clearTimeout(movieTimeout); 
@@ -155,7 +151,7 @@
                 setTimeout(function() {
                     isIntroPlaying = false;
                     playMovie(currentTrackIndex); 
-                }, 11000); // Ровно 11 секунд заставки
+                }, 11000); 
             }
         }
 
@@ -181,6 +177,5 @@
 
         window.onload = startBroadcast;
     </script>
-
 </body>
 </html>
