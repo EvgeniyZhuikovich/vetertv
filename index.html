@@ -139,16 +139,15 @@
             document.getElementById('onlineCount').textContent = "1";
         }
 
-        // ТВОЙ КРУТОЙ 7-ЧАСОВОЙ СБОРНИК ВСЕХ ПОЛНОМЕТРАЖЕК
-    const playlist = [
-    { id: 'l_U_2wz4brk', title: 'Простоквашино 111-130', duration: 6835 },
-    { id: 'jLqoUN6ucUw', title: 'Простоквашино 91-110',  duration: 7916 },
-    { id: 'TJthQwtGfTM', title: 'Простоквашино 71-90',   duration: 7200 },
-    { id: 'qswKwfU5tis', title: 'Простоквашино 51-70',   duration: 7217 },
-    { id: 'UpDkayeSxm8', title: 'Простоквашино 31-50',   duration: 7335 },
-    { id: 'CYpcMNTtCSY', title: 'Простоквашино 1-30',    duration: 11015 } // Добавили финальный сборник
-   ];
-
+        // ТЕПЕРЬ СТРОГО ПО ПОРЯДКУ: ОТ 1 ДО 130 СЕРИИ
+        const playlist = [
+            { id: 'CYpcMNTtCSY', title: 'Простоквашино 1-30',    duration: 11015 },
+            { id: 'UpDkayeSxm8', title: 'Простоквашино 31-50',   duration: 7335 },
+            { id: 'qswKwfU5tis', title: 'Простоквашино 51-70',   duration: 7217 },
+            { id: 'TJthQwtGfTM', title: 'Простоквашино 71-90',   duration: 7200 },
+            { id: 'jLqoUN6ucUw', title: 'Простоквашино 91-110',  duration: 7916 },
+            { id: 'l_U_2wz4brk', title: 'Простоквашино 111-130', duration: 6835 }
+        ];
         
         const introId = 'UbY3QIM69Ho';
         const totalDuration = playlist.reduce((sum, item) => sum + item.duration, 0);
@@ -179,7 +178,16 @@
 
             let timeInCycle = currentTimestamp % totalDuration;
             let currentMovie = playlist[0];
-            let startSeconds = timeInCycle;
+            let startSeconds = 0;
+
+            for (let i = 0; i < playlist.length; i++) {
+                if (timeInCycle < playlist[i].duration) {
+                    currentMovie = playlist[i];
+                    startSeconds = Math.floor(timeInCycle);
+                    break;
+                }
+                timeInCycle -= playlist[i].duration;
+            }
 
             const movieUrl = p1 + p2 + p3 + p4 + currentMovie.id + `?autoplay=1&start=${startSeconds}&mute=${muteParam}&controls=0&enablejsapi=1`;
             
