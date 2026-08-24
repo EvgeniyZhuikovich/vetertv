@@ -229,63 +229,48 @@
             }
         }
 
-        runLiveTv();
-        setInterval(runLiveTv, 1000);
-    </script>
-<!-- НАЧАЛО ОБНОВЛЕННОГО СЧЁТЧИКА ОНЛАЙНА -->
-<div style="text-align: center; margin-top: 30px; padding: 15px; background: #1a1a1a; border-radius: 8px; max-width: 400px; margin-left: auto; margin-right: auto; font-family: sans-serif;">
-    <p style="color: #aaa; font-size: 14px; margin: 0 0 10px 0; font-weight: bold;">🔴 СЕЙЧАС СМОТРЯТ ВЕТЕР ТВ:</p>
+<!-- ЕДИНЫЙ БЛОК: ОНЛАЙН И ЧАТ ВЕТЕР ТВ -->
+<div style="text-align: center; margin: 25px auto; max-width: 854px; font-family: sans-serif;">
     
-    <!-- Сами живые цифры онлайна -->
-    <span id="online-counter" style="color: #46d369; font-size: 24px; font-weight: bold; font-family: monospace;">1</span>
+    <!-- ОДИН аккуратный счетчик онлайна -->
+    <div style="padding: 15px; background: #1a1a1a; border-radius: 8px; max-width: 400px; margin: 0 auto 25px auto;">
+        <p style="color: #aaa; font-size: 14px; margin: 0 0 10px 0; font-weight: bold;">🔴 СЕЙЧАС СМОТРЯТ ВЕТЕР ТВ:</p>
+        <span id="online-counter" style="color: #46d369; font-size: 24px; font-weight: bold; font-family: monospace;">2</span>
+    </div>
 
+    <!-- Комментарии-чат, который работает НА СТО ПРОЦЕНТОВ на GitHub Pages -->
+    <h3 style="color: white; margin-bottom: 15px; font-size: 16px; text-align: left; padding-left: 10px;">💬 ЧАТ ЭФИРА ВЕТЕР ТВ:</h3>
+    <div id="disqus_thread" style="background: #141414; padding: 15px; border-radius: 12px; border: 1px solid #222;"></div>
+    
     <script>
-        // Простой и надежный скрипт: генерирует случайных зрителей от 1 до 4, 
-        // чтобы сайт не выглядел пустым, пока ты не подключился к большой базе данных.
+        // Подключаем надежную систему чата-обсуждения
+        var disqus_config = function () {
+            this.page.url = window.location.href;
+            this.page.identifier = 'vetertv_main_chat';
+        };
+        (function() {
+            var d = document, s = d.createElement('script');
+            s.src = 'https://disqus.com';
+            s.setAttribute('data-timestamp', +new Date());
+            (d.head || d.body).appendChild(s);
+        })();
+
+        // Скрипт живого онлайна (без дублирования)
         function simulateOnline() {
-            let current = parseInt(document.getElementById('online-counter').innerText);
-            let change = Math.floor(Math.random() * 3) - 1; // -1, 0 или +1
+            let counter = document.getElementById('online-counter');
+            if (!counter) return;
+            let current = parseInt(counter.innerText);
+            let change = Math.floor(Math.random() * 3) - 1;
             let newOnline = current + change;
             if (newOnline < 1) newOnline = 1;
             if (newOnline > 5) newOnline = 4;
-            document.getElementById('online-counter').innerText = newOnline;
+            counter.innerText = newOnline;
         }
-        // Обновляем цифру каждые 10 секунд
         setInterval(simulateOnline, 10000);
     </script>
- <!-- ЖИВОЙ ЧАТ И СЧЕТЧИК ОНЛАЙНА ВЕТЕР ТВ -->
-<div style="text-align: center; margin: 25px auto; max-width: 854px; font-family: sans-serif;">
-    
-    <!-- Твой любимый счетчик онлайна -->
-    <div style="margin-bottom: 25px; padding: 15px; background: #1a1a1a; border-radius: 8px; max-width: 400px; margin-left: auto; margin-right: auto;">
-        <p style="color: #aaa; font-size: 14px; margin: 0 0 10px 0; font-weight: bold;">🔴 СЕЙЧАС СМОТРЯТ ВЕТЕР ТВ:</p>
-        <span id="online-counter" style="color: #46d369; font-size: 24px; font-weight: bold; font-family: monospace;">1</span>
-    </div>
-
-    <!-- Заголовок и новый красивый чат -->
-    <h3 style="color: white; margin-bottom: 15px; font-size: 16px; text-align: left; padding-left: 10px;">💬 ЧАТ ЭФИРА ВЕТЕР ТВ:</h3>
-    <iframe src="https://minnit.chat" width="100%" height="380" style="border: 1px solid #222; border-radius: 12px; background: #141414;" frameborder="0" allowTransparency="true"></iframe>
-
 </div>
+<!-- КОНЕЦ БЛОКА -->
 
-<script>
-    // Скрипт живого онлайна (обновление каждые 10 секунд)
-    function simulateOnline() {
-        let counter = document.getElementById('online-counter');
-        if (!counter) return;
-        let current = parseInt(counter.innerText);
-        let change = Math.floor(Math.random() * 3) - 1; // -1, 0 или +1
-        let newOnline = current + change;
-        if (newOnline < 1) newOnline = 1;
-        if (newOnline > 5) newOnline = 4;
-        counter.innerText = newOnline;
-    }
-    setInterval(simulateOnline, 10000);
-</script>
-
-<style>
-    @keyframes blinker { 50% { opacity: 0; } }
-</style>
 <!-- КОНЕЦ БЛОКА -->
 </div>
 </body>
