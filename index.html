@@ -14,77 +14,53 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start;
+            justify-content: center;
             min-height: 100vh;
         }
 
         h1 {
             color: #58a6ff;
-            margin-top: 20px;
             margin-bottom: 5px;
-            font-size: 28px;
+            font-size: 32px;
             text-transform: uppercase;
             letter-spacing: 2px;
         }
 
         .sub-title {
             color: #8b949e;
-            font-size: 13px;
-            margin-bottom: 25px;
+            font-size: 14px;
+            margin-bottom: 40px;
             font-weight: 500;
         }
 
-        .player-container {
-            position: relative;
-            width: 90%;
-            max-width: 854px;
-            aspect-ratio: 16 / 9;
-            background: #000;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            border: 1px solid #21262d;
-        }
-
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-
-        .controls {
-            margin-top: 20px;
-            display: flex;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .btn {
-            background-color: #21262d;
-            color: #c9d1d9;
-            border: 1px solid #30363d;
-            padding: 12px 24px;
-            font-size: 14px;
-            font-weight: 600;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn:hover {
-            background-color: #30363d;
-            border-color: #8b949e;
+        /* Большая неоновая кнопка запуска ТВ */
+        .play-tv-btn {
+            display: inline-block;
+            background-color: #e50914;
             color: #ffffff;
+            text-decoration: none;
+            padding: 20px 40px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 50px;
+            box-shadow: 0 0 25px rgba(229, 9, 20, 0.7);
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 50px;
+            border: 2px solid #ff3333;
+        }
+
+        .play-tv-btn:hover {
+            transform: scale(1.05);
+            background-color: #ff1e27;
+            box-shadow: 0 0 35px rgba(229, 9, 20, 0.9);
         }
 
         .footer-block {
             width: 90%;
             max-width: 854px;
             text-align: center;
-            margin-bottom: 40px;
         }
 
         .counter-box {
@@ -115,20 +91,15 @@
 <body>
 
     <h1>ВЕТЕР ТВ</h1>
-    <div class="sub-title" id="status-text">Запуск трансляции...</div>
+    <div class="sub-title">Официальный сайт телеканала</div>
 
-    <!-- КОНТЕЙНЕР ПЛЕЕРА -->
-    <div class="player-container">
-        <iframe id="tv-player" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-    </div>
+    <!-- ГЛАВНАЯ КНОПКА ВКЛЮЧЕНИЯ ТЕЛЕВИЗОРА -->
+    <!-- Замени ссылку ниже на прямую ссылку своего Ютуб-канала или плейлиста со Смешариками -->
+    <a href="https://youtube.com" target="_blank" class="play-tv-btn">
+        🔴 ЗАПУСТИТЬ ЭФИР (YOUTUBE)
+    </a>
 
-    <!-- КНОПКИ УПРАВЛЕНИЯ -->
-    <div class="controls">
-        <button id="mute-btn" class="btn" onclick="toggleMute()">🔇 Включить звук</button>
-        <button class="btn" onclick="goFullscreen()">📺 Во весь экран</button>
-    </div>
-
-    <!-- СЧЕТЧИК ОНЛАЙНА -->
+    <!-- ЧИСТЫЙ СЧЕТЧИК ОНЛАЙНА -->
     <div class="footer-block">
         <div class="counter-box">
             <p class="counter-title">🔴 СЕЙЧАС СМОТРЯТ ВЕТЕР ТВ:</p>
@@ -137,85 +108,18 @@
     </div>
 
     <script>
-        const myIntroID = 'UbY3QIM69Ho'; // Твоя заставка
-        
-        const marathonPlaylist = [
-            { id: 'bAqLx_E9bYw', duration: 5234, title: 'Смешарики. Начало' },
-            { id: '2S50xKldJn0', duration: 4920, title: 'Смешарики. Легенда о золотом драконе' },
-            { id: 'VzZXcr8YmVo', duration: 5160, title: 'Смешарики. Дежавю' },
-            { id: 'gs-MZg77o6w', duration: 5035, title: 'Смешарики снимают кино' }
-        ];
-
-        let playerIframe = document.getElementById('tv-player');
-        let statusBlock = document.getElementById('status-text');
-        let currentVideoID = myIntroID; // Следим за тем, какое видео играет прямо сейчас
-        let isMuted = true;
-        let currentTrackIndex = 0;
-
-        function startBroadcast() {
-            if (statusBlock) statusBlock.innerText = "В эфире: Фирменная заставка Ветер ТВ";
-            currentVideoID = myIntroID;
-            
-            // Запускаем заставку с правильным адресом
-            playerIframe.src = "https://youtube.com" + myIntroID + "?autoplay=1&mute=" + (isMuted ? 1 : 0);
-            
-            // Ровно 10 секунд заставки
-            setTimeout(function() {
-                playMovie(0);
-            }, 10000);
-        }
-
-        function playMovie(index) {
-            if (index >= marathonPlaylist.length) index = 0; 
-            currentTrackIndex = index;
-            let movie = marathonPlaylist[index];
-            currentVideoID = movie.id; // Запоминаем новый ID мультика
-            
-            if (statusBlock) statusBlock.innerText = "В эфире: " + movie.title + " 🍿";
-            playerIframe.src = "https://youtube.com" + movie.id + "?autoplay=1&mute=" + (isMuted ? 1 : 0);
-            
-            setTimeout(function() {
-                playMovie(currentTrackIndex + 1);
-            }, movie.duration * 1000);
-        }
-
-        // ПОЛНОСТЬЮ ОБНОВЛЕННАЯ БЕЗОПАСНАЯ ФУНКЦИЯ ЗВУКА
-        function toggleMute() {
-            let btn = document.getElementById('mute-btn');
-            isMuted = !isMuted; // Переключаем режим звука
-            
-            if (!isMuted) {
-                btn.innerHTML = "🔊 Выключить звук";
-            } else {
-                btn.innerHTML = "🔇 Включить звук";
-            }
-            
-            // Пересобираем ссылку с нуля на основе текущего ID видео. 
-            // Это на 100% защищает от склеивания букв и поломки IP-адресов!
-            playerIframe.src = "https://youtube.com" + currentVideoID + "?autoplay=1&mute=" + (isMuted ? 1 : 0);
-        }
-
-        function goFullscreen() {
-            let container = document.querySelector('.player-container');
-            if (container.requestFullscreen) container.requestFullscreen();
-            else if (container.mozRequestFullScreen) container.mozRequestFullScreen();
-            else if (container.webkitRequestFullscreen) container.webkitRequestFullscreen();
-            else if (container.msRequestFullscreen) container.msRequestFullscreen();
-        }
-
+        // Скрипт живого онлайна
         function simulateOnline() {
             let counter = document.getElementById('online-counter');
             if (!counter) return;
             let current = parseInt(counter.innerText);
-            let change = Math.floor(Math.random() * 3) - 1;
+            let change = Math.floor(Math.random() * 3) - 1; // -1, 0 или +1
             let newOnline = current + change;
             if (newOnline < 1) newOnline = 1;
             if (newOnline > 5) newOnline = 4;
             counter.innerText = newOnline;
         }
         setInterval(simulateOnline, 8000);
-
-        window.onload = startBroadcast;
     </script>
 
 </body>
