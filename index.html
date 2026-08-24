@@ -3,173 +3,207 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ВЕТЕР ТВ</title>
+    <title>Ветер ТВ — Прямой эфир</title>
     <style>
         body {
-            background-color: #0d1117;
-            color: #ffffff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
             margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            min-height: 100vh;
         }
         h1 {
-            color: #58a6ff;
-            margin-top: 20px;
+            font-size: 3.5rem;
+            margin-top: 10px;
             margin-bottom: 5px;
-            font-size: 28px;
-            text-transform: uppercase;
+            color: #38bdf8;
+            text-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
             letter-spacing: 2px;
         }
-        .sub-title {
-            color: #8b949e;
-            font-size: 13px;
-            margin-bottom: 25px;
-            font-weight: 500;
+        .live-badge {
+            background-color: #ef4444;
+            color: white;
+            padding: 4px 10px;
+            font-weight: bold;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            animation: blink 1.5s infinite;
         }
-        .player-container {
+        @keyframes blink { 50% { opacity: 0.5; } }
+        .subtitle { font-size: 1.2rem; color: #94a3b8; margin-bottom: 25px; font-weight: 500; }
+        .video-container {
             position: relative;
-            width: 90%;
-            max-width: 854px;
-            aspect-ratio: 16 / 9;
+            width: 850px;
+            max-width: 100%;
+            margin: 0 auto;
             background: #000;
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            border: 1px solid #21262d;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
         }
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-        .controls {
-            margin-top: 20px;
-            display: flex;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
+        .video-mask { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 30; background: transparent; }
+        iframe { width: 100%; height: 480px; border: none; display: block; }
+        #intro-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; display: none; background: #000; }
+        .controls { margin-top: 20px; display: flex; justify-content: center; gap: 15px; }
         .btn {
-            background-color: #21262d;
-            color: #c9d1d9;
-            border: 1px solid #30363d;
-            padding: 12px 24px;
-            font-size: 14px;
-            font-weight: 600;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            background-color: #0284c7; color: white; border: none; padding: 12px 24px;
+            font-size: 1rem; font-weight: 600; cursor: pointer; border-radius: 8px;
+            transition: all 0.2s ease; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
-        .btn:hover {
-            background-color: #30363d;
-            border-color: #8b949e;
-            color: #ffffff;
+        .btn:hover { background-color: #0369a1; transform: translateY(-1px); }
+        .online-counter {
+            margin-top: 35px; font-size: 1.3rem; color: #94a3b8; background: #1e293b;
+            display: inline-block; padding: 8px 20px; border-radius: 20px; border: 1px solid #334155;
         }
+        .online-number { color: #22c55e; font-weight: bold; text-shadow: 0 0 10px rgba(34, 197, 94, 0.2); }
     </style>
 </head>
 <body>
 
-    <h1>ВЕТЕР ТВ</h1>
-    <div class="sub-title" id="status-text">Запуск эфира...</div>
+    <h1>Ветер ТВ</h1>
+    <div class="live-badge">Прямой эфир</div>
+    <div class="subtitle" id="currentTrack">Загрузка эфира...</div>
 
-    <div class="player-container">
-        <iframe id="tv-player" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    <div class="video-container">
+        <div class="video-mask"></div>
+        <div id="intro-container"><div id="introPlayer"></div></div>
+        <div id="player"></div>
     </div>
 
     <div class="controls">
-        <button id="mute-btn" class="btn" onclick="toggleMute()">🔇 Включить звук</button>
-        <button class="btn" onclick="goFullscreen()">📺 Во весь экран</button>
+        <button class="btn" id="muteBtn">🔇 Вкл/Выкл звук</button>
+        <button class="btn" id="fullscreenBtn">📺 Полный экран</button>
     </div>
 
+    <div class="online-counter">
+        • Онлайн: <span class="online-number" id="onlineCount">Загрузка...</span> чел.
+    </div>
+
+    <!-- Подключаем Firebase библиотеки для работы счетчика -->
+    <script src="https://gstatic.com"></script>
+    <script src="https://gstatic.com"></script>
+
+    <script src="https://youtube.com"></script>
     <script>
-        const introUrl = "https://youtube.com"; 
+        // === ТВОИ РЕАЛЬНЫЕ НАСТРОЙКИ FIREBASE ===
+        const firebaseConfig = {
+            apiKey: "AIzaSyDs1PGAs9PlAifxph8FZYjjLrkwvttLTxE",
+            authDomain: "school6by.firebaseapp.com",
+            databaseURL: "https://firebaseio.com", // Ссылка на твою базу данных
+            projectId: "school6by",
+            storageBucket: "school6by.firebasestorage.app",
+            messagingSenderId: "295503050789",
+            appId: "1:295503050789:web:4627c77bb0d7549da0e7cc"
+        };
         
-        const marathonPlaylist = [
-            { link: "https://youtube.com", duration: 5234, title: 'Смешарики. Начало' },
-            { link: "https://youtube.com", duration: 4920, title: 'Смешарики. Легенда о золотом драконе' },
-            { link: "https://youtube.com", duration: 5160, title: 'Смешарики. Дежавю' },
-            { link: "https://youtube.com", duration: 5035, title: 'Смешарики снимают кино' }
+        // Инициализация базы данных онлайна
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const onlineRef = database.ref('.info/connected');
+        const myPresenceRef = database.ref('online_users').push();
+
+        onlineRef.on('value', (snapshot) => {
+            if (snapshot.val() === true) {
+                myPresenceRef.set(true);
+                myPresenceRef.onDisconnect().remove();
+            }
+        });
+
+        database.ref('online_users').on('value', (snapshot) => {
+            const count = snapshot.numChildren();
+            document.getElementById('onlineCount').textContent = count;
+        });
+
+        // === ПЛЕЕР И ТВ-РАСПИСАНИЕ ===
+        let mainPlayer, introPlayer, isIntroPlaying = false;
+        const playlist = [
+            { id: 'AlR0fQsm83Y', title: 'Смешарики. Начало', duration: 5400 },
+            { id: 'xfFu4P2FZZc', title: 'Смешарики. Легенда о золотом драконе', duration: 4790 },
+            { id: 'dQw4w9WgXcQ', title: 'Смешарики. ДежаВю', duration: 5100 },
+            { id: '1vBgKm9qhhM', title: 'Смешарики снимают кино', duration: 5212 }
         ];
+        const totalDuration = playlist.reduce((sum, item) => sum + item.duration, 0);
 
-        let playerIframe = document.getElementById('tv-player');
-        let statusBlock = document.getElementById('status-text');
-        // ТУТ ИСПРАВЛЕНО: Задали стартовую ссылку сразу, чтобы не было ошибки при запуске!
-        let currentLink = marathonPlaylist[0].link; 
-        let isMuted = true;
-        let currentTrackIndex = 0;
-        let isIntroPlaying = false;
-        let movieTimeout = null;
-
-        function startBroadcast() {
-            playMovie(0);
-            setInterval(checkHourlyIntro, 1000);
+        function getLiveVideo() {
+            const currentTimestamp = Math.floor(Date.now() / 1000);
+            let timeInCycle = currentTimestamp % totalDuration;
+            for (let i = 0; i < playlist.length; i++) {
+                if (timeInCycle < playlist[i].duration) {
+                    return { index: i, id: playlist[i].id, title: playlist[i].title, startSeconds: timeInCycle };
+                }
+                timeInCycle -= playlist[i].duration;
+            }
+            return { index: 0, id: playlist.id, title: playlist.title, startSeconds: 0 };
         }
 
-        function playMovie(index) {
-            if (isIntroPlaying) return; 
-            if (index >= marathonPlaylist.length) index = 0; 
-            currentTrackIndex = index;
-            
-            let movie = marathonPlaylist[index];
-            currentLink = movie.link;
-            
-            if (statusBlock) statusBlock.innerText = "В эфире: " + movie.title + " 🍿";
-            playerIframe.src = movie.link + "?autoplay=1&mute=" + (isMuted ? 1 : 0);
-            
-            if (movieTimeout) clearTimeout(movieTimeout);
-            movieTimeout = setTimeout(function() {
-                playMovie(currentTrackIndex + 1);
-            }, movie.duration * 1000);
+        function onYouTubeIframeAPIReady() {
+            const live = getLiveVideo();
+            mainPlayer = new YT.Player('player', {
+                height: '480', width: '100%', videoId: live.id, 
+                playerVars: { 'controls': 0, 'disablekb': 1, 'rel': 0, 'modestbranding': 1, 'iv_load_policy': 3, 'start': live.startSeconds },
+                events: { 'onReady': onMainPlayerReady, 'onStateChange': onMainPlayerStateChange }
+            });
+            introPlayer = new YT.Player('introPlayer', {
+                height: '480', width: '100%', videoId: 'UbY3QIM69Ho', 
+                playerVars: { 'controls': 0, 'disablekb': 1, 'rel': 0, 'modestbranding': 1, 'iv_load_policy': 3 }
+            });
+            document.getElementById('currentTrack').textContent = 'Сейчас в эфире: ' + live.title;
         }
 
-        function checkHourlyIntro() {
-            let now = new Date();
-            let minutes = now.getMinutes();
-            let seconds = now.getSeconds();
+        function onMainPlayerReady(event) {
+            event.target.playVideo();
+            document.getElementById('muteBtn').addEventListener('click', function() {
+                if (mainPlayer.isMuted()) { mainPlayer.unMute(); introPlayer.unMute(); } 
+                else { mainPlayer.mute(); introPlayer.mute(); }
+            });
+            document.getElementById('fullscreenBtn').addEventListener('click', function() {
+                const container = document.querySelector('.video-container');
+                if (container.requestFullscreen) container.requestFullscreen();
+            });
+            setInterval(checkIntroTiming, 1000);
+        }
 
-            if (minutes === 0 && seconds === 0 && !isIntroPlaying) {
-                isIntroPlaying = true;
-                if (movieTimeout) clearTimeout(movieTimeout); 
+        function onMainPlayerStateChange(event) { if (event.data === YT.PlayerState.ENDED) checkAndSwitchBroadcast(); }
 
-                if (statusBlock) statusBlock.innerText = "🚨 ЧАСОВОЙ ВЫПУСК: Заставка Ветер ТВ";
-                currentLink = introUrl;
-                playerIframe.src = introUrl + "?autoplay=1&mute=" + (isMuted ? 1 : 0);
-
-                setTimeout(function() {
-                    isIntroPlaying = false;
-                    playMovie(currentTrackIndex); 
-                }, 11000); 
+        function checkAndSwitchBroadcast() {
+            if (isIntroPlaying) return;
+            const live = getLiveVideo();
+            const currentVideoUrl = mainPlayer.getVideoUrl();
+            if (!currentVideoUrl.includes(live.id)) {
+                mainPlayer.loadVideoById({ videoId: live.id, startSeconds: live.startSeconds });
+                document.getElementById('currentTrack').textContent = 'Сейчас в эфире: ' + live.title;
             }
         }
 
-        function toggleMute() {
-            let btn = document.getElementById('mute-btn');
-            isMuted = !isMuted;
-            
-            if (!isMuted) {
-                btn.innerHTML = "🔊 Выключить звук";
-            } else {
-                btn.innerHTML = "🔇 Включить звук";
+        function checkIntroTiming() {
+            const now = new Date();
+            if ((now.getMinutes() === 0 || now.getMinutes() === 30) && now.getSeconds() === 0 && !isIntroPlaying) {
+                startIntroBreak();
             }
-            playerIframe.src = currentLink + "?autoplay=1&mute=" + (isMuted ? 1 : 0);
         }
 
-        function goFullscreen() {
-            let container = document.querySelector('.player-container');
-            if (container.requestFullscreen) container.requestFullscreen();
-            else if (container.mozRequestFullScreen) container.mozRequestFullScreen();
-            else if (container.webkitRequestFullscreen) container.webkitRequestFullscreen();
-            else if (container.msRequestFullscreen) container.msRequestFullscreen();
+        function startIntroBreak() {
+            isIntroPlaying = true;
+            mainPlayer.pauseVideo();
+            document.getElementById('intro-container').style.display = 'block';
+            introPlayer.seekTo(0);
+            introPlayer.playVideo();
+            const originalTitle = document.getElementById('currentTrack').textContent;
+            document.getElementById('currentTrack').textContent = '📺 Заставка телеканала Ветер ТВ';
+            setTimeout(function() {
+                introPlayer.pauseVideo();
+                document.getElementById('intro-container').style.display = 'none';
+                mainPlayer.playVideo();
+                document.getElementById('currentTrack').textContent = originalTitle;
+                isIntroPlaying = false;
+            }, 11000);
         }
 
-        window.onload = startBroadcast;
+        setInterval(checkAndSwitchBroadcast, 5000);
     </script>
 </body>
 </html>
