@@ -17,7 +17,6 @@
             justify-content: flex-start;
             min-height: 100vh;
         }
-
         h1 {
             color: #58a6ff;
             margin-top: 20px;
@@ -26,14 +25,12 @@
             text-transform: uppercase;
             letter-spacing: 2px;
         }
-
         .sub-title {
             color: #8b949e;
             font-size: 13px;
             margin-bottom: 25px;
             font-weight: 500;
         }
-
         .player-container {
             position: relative;
             width: 90%;
@@ -45,20 +42,17 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             border: 1px solid #21262d;
         }
-
         iframe {
             width: 100%;
             height: 100%;
             border: none;
         }
-
         .controls {
             margin-top: 20px;
             display: flex;
             gap: 15px;
             margin-bottom: 30px;
         }
-
         .btn {
             background-color: #21262d;
             color: #c9d1d9;
@@ -73,7 +67,6 @@
             align-items: center;
             gap: 8px;
         }
-
         .btn:hover {
             background-color: #30363d;
             border-color: #8b949e;
@@ -107,7 +100,8 @@
 
         let playerIframe = document.getElementById('tv-player');
         let statusBlock = document.getElementById('status-text');
-        let currentLink = ""; 
+        // ТУТ ИСПРАВЛЕНО: Задали стартовую ссылку сразу, чтобы не было ошибки при запуске!
+        let currentLink = marathonPlaylist[0].link; 
         let isMuted = true;
         let currentTrackIndex = 0;
         let isIntroPlaying = false;
