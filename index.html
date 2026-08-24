@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ветер тв - прямой эфир</title>
+    <title>ВЕТЕР ТВ</title>
     <style>
         body {
             background-color: #0d1117;
@@ -79,30 +79,6 @@
             border-color: #8b949e;
             color: #ffffff;
         }
-
-        .footer-block {
-            width: 90%;
-            max-width: 854px;
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .counter-box {
-            padding: 15px;
-            background: #161b22;
-            border: 1px solid #21262d;
-            border-radius: 8px;
-            max-width: 350px;
-            margin: 0 auto;
-        }
-
-        .counter-title {
-            color: #8b949e;
-            font-size: 13px;
-            margin: 0 0 8px 0;
-            font-weight: bold;
-            letter-spacing: 1px;
-        }
     </style>
 </head>
 <body>
@@ -110,7 +86,7 @@
     <h1>ВЕТЕР ТВ</h1>
     <div class="sub-title" id="status-text">Запуск эфира...</div>
 
-    <!-- КОНТЕЙНЕР ПЛЕЕРА -->
+    <!-- ЭКРАН ТЕЛЕВИЗОРА -->
     <div class="player-container">
         <iframe id="tv-player" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
     </div>
@@ -121,27 +97,20 @@
         <button class="btn" onclick="goFullscreen()">📺 Во весь экран</button>
     </div>
 
-    <!-- НАСТОЯЩИЙ СЧЕТЧИК ОНЛАЙНА -->
-    <div class="footer-block">
-        <div class="counter-box">
-            <p class="counter-title">🔴 СЕЙЧАС СМОТРЯТ ВЕТЕР ТВ:</p>
-            <a href="https://amung.us"><img src="https://amung.us" width="80" height="15" border="0" alt="real online"></a>
-        </div>
-    </div>
-
     <script>
-        const myIntroID = 'UbY3QIM69Ho'; // Твоя заставка
+        const introUrl = "https://youtube.com"; // Твоя заставка
         
+        // ВСЕ ТВОИ АЙДИШНИКИ ФИЛЬМОВ НА МЕСТЕ:
         const marathonPlaylist = [
-            { id: 'AlR0fQsm83Y', duration: 5234, title: 'Смешарики. Начало' },
-            { id: 'xfFu4P2FZZc', duration: 4920, title: 'Смешарики. Легенда о золотом драконе' },
-            { id: '1vBgKm9qhhM', duration: 5160, title: 'Смешарики. Дежавю' },
-            { id: 'gs-MZg77o6w', duration: 5035, title: 'Смешарики снимают кино' }
+            { link: "https://youtube.com", duration: 5234, title: 'Смешарики. Начало' },
+            { link: "https://youtube.com", duration: 4920, title: 'Смешарики. Легенда о золотом драконе' },
+            { link: "https://youtube.com", duration: 5160, title: 'Смешарики. Дежавю' },
+            { link: "https://youtube.com", duration: 5035, title: 'Смешарики снимают кино' }
         ];
 
         let playerIframe = document.getElementById('tv-player');
         let statusBlock = document.getElementById('status-text');
-        let currentVideoID = myIntroID;
+        let currentLink = marathonPlaylist[0].link; 
         let isMuted = true;
         let currentTrackIndex = 0;
         let isIntroPlaying = false;
@@ -158,11 +127,10 @@
             currentTrackIndex = index;
             
             let movie = marathonPlaylist[index];
-            currentVideoID = movie.id;
+            currentLink = movie.link;
             
             if (statusBlock) statusBlock.innerText = "В эфире: " + movie.title + " 🍿";
-            // ТУТ ЖЕСТКО ЗАКРЕПЛЕН СЛЭШ ПЕРЕД ID
-            playerIframe.src = "https://youtube.com" + movie.id + "?autoplay=1&mute=" + (isMuted ? 1 : 0);
+            playerIframe.src = movie.link + "?autoplay=1&mute=" + (isMuted ? 1 : 0);
             
             if (movieTimeout) clearTimeout(movieTimeout);
             movieTimeout = setTimeout(function() {
@@ -175,19 +143,19 @@
             let minutes = now.getMinutes();
             let seconds = now.getSeconds();
 
+            // Ровно в 00 минут каждого часа прерывает заставкой на 11 секунд
             if (minutes === 0 && seconds === 0 && !isIntroPlaying) {
                 isIntroPlaying = true;
                 if (movieTimeout) clearTimeout(movieTimeout); 
 
                 if (statusBlock) statusBlock.innerText = "🚨 ЧАСОВОЙ ВЫПУСК: Заставка Ветер ТВ";
-                currentVideoID = myIntroID;
-                // ТУТ ТОЖЕ СЛЭШ ЗАКРЕПЛЕН
-                playerIframe.src = "https://youtube.com" + myIntroID + "?autoplay=1&mute=" + (isMuted ? 1 : 0);
+                currentLink = introUrl;
+                playerIframe.src = introUrl + "?autoplay=1&mute=" + (isMuted ? 1 : 0);
 
                 setTimeout(function() {
                     isIntroPlaying = false;
                     playMovie(currentTrackIndex); 
-                }, 11000); // 11 секунд заставки
+                }, 11000); // Ровно 11 секунд заставки
             }
         }
 
@@ -200,8 +168,7 @@
             } else {
                 btn.innerHTML = "🔇 Включить звук";
             }
-            // ТУТ ТОЖЕ УБРАНА ОШИБКА СКЛЕИВАНИЯ
-            playerIframe.src = "https://youtube.com" + currentVideoID + "?autoplay=1&mute=" + (isMuted ? 1 : 0);
+            playerIframe.src = currentLink + "?autoplay=1&mute=" + (isMuted ? 1 : 0);
         }
 
         function goFullscreen() {
