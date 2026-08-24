@@ -87,11 +87,12 @@
         • Онлайн: <span class="online-number" id="onlineCount">Загрузка...</span> чел.
     </div>
 
-    <!-- Подключаем Firebase -->
+    <!-- Подключаем базы Google -->
     <script src="https://gstatic.com"></script>
     <script src="https://gstatic.com"></script>
 
     <script>
+        // Твои проверенные ключи приложения school6by
         const firebaseConfig = {
             apiKey: "AIzaSyDs1PGAs9PlAifxph8FZYjjLrkwvttLTxE",
             authDomain: "://firebaseapp.com",
@@ -102,6 +103,7 @@
             appId: "1:295503050789:web:4627c77bb0d7549da0e7cc"
         };
         
+        // Запуск базы данных
         try {
             firebase.initializeApp(firebaseConfig);
             const database = firebase.database();
@@ -123,7 +125,7 @@
             document.getElementById('onlineCount').textContent = "1";
         }
 
-        // ТВ-расписание
+        // Логика плееров и плейлиста
         let mainPlayer = null, introPlayer = null, isIntroPlaying = false, isPlayerReady = false;
         const playlist = [
             { id: 'AlR0fQsm83Y', title: 'Смешарики. Начало', duration: 5400 },
@@ -142,7 +144,7 @@
                 }
                 timeInCycle -= playlist[i].duration;
             }
-            return { index: 0, id: playlist[i].id, title: playlist[i].title, startSeconds: 0 };
+            return { index: 0, id: playlist[0].id, title: playlist[0].title, startSeconds: 0 };
         }
 
         function onYouTubeIframeAPIReady() {
@@ -163,7 +165,7 @@
         }
 
         function onMainPlayerReady(event) {
-            isPlayerReady = true; // Защита: плеер официально готов
+            isPlayerReady = true;
             event.target.playVideo();
 
             document.getElementById('muteBtn').addEventListener('click', function() {
@@ -188,7 +190,7 @@
         function onMainPlayerStateChange(event) { if (event.data === YT.PlayerState.ENDED) checkAndSwitchBroadcast(); }
 
         function checkAndSwitchBroadcast() {
-            if (isIntroPlaying || !isPlayerReady || !mainPlayer || !mainPlayer.getVideoUrl) return; // Жесткая проверка готовности
+            if (isIntroPlaying || !isPlayerReady || !mainPlayer || !mainPlayer.getVideoUrl) return;
             
             const live = getLiveVideo();
             const currentVideoUrl = mainPlayer.getVideoUrl();
@@ -223,4 +225,8 @@
             }, 11000);
         }
 
-        // Запускаем синхронизацию только через 3 секунды после старта, чтобы всё успело прогрузиться
+        setTimeout(() => {
+            setInterval(checkAndSwitchBroadcast, 5000);
+        }, 3000);
+    </script>
+
