@@ -36,21 +36,12 @@
         @keyframes blink { 50% { opacity: 0.5; } }
         .subtitle { font-size: 1.2rem; color: #94a3b8; margin-bottom: 25px; font-weight: 500; }
         
-        /* Главная сетка: видео + чат */
-        .main-broadcast-layout {
-            display: flex;
-            max-width: 1200px;
-            margin: 0 auto;
-            gap: 20px;
-            justify-content: center;
-            align-items: flex-start;
-        }
-
         .video-container {
             position: relative;
-            flex: 1;
-            max-width: 850px;
+            width: 850px;
+            max-width: 100%;
             height: 480px; 
+            margin: 0 auto;
             background: #000;
             border-radius: 12px;
             overflow: hidden;
@@ -60,50 +51,19 @@
         
         iframe { width: 100% !important; height: 480px !important; border: none; display: block; }
         
-        /* Контейнер для готового чата справа */
-        .chat-container {
-            width: 340px;
-            height: 480px;
-            background: #1e293b;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
-            border: 1px solid #334155;
-        }
-
-        /* На мобилках чат прыгает вниз */
-        @media (max-width: 1000px) {
-            .main-broadcast-layout {
-                flex-direction: column;
-                align-items: center;
-            }
-            .chat-container {
-                width: 100%;
-                max-width: 850px;
-                height: 400px;
-                margin-top: 10px;
-            }
-        }
-
-        /* Настройки полного экрана */
-        .video-container:fullscreen iframe {
-            width: 100vw !important;
-            height: 56.25vw !important;
-            min-height: 100vh !important;
-            min-width: 177.77vh !important;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-        .video-container:fullscreen .video-mask {
-            width: 100vw !important;
-            height: 100vh !important;
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
-
+/* Жесткое растягивание самого видео на весь экран без черных полос */
+.video-container:fullscreen iframe,
+.video-container:fullscreen .video-mask,
+.video-container:-webkit-full-screen iframe,
+.video-container:-webkit-full-screen .video-mask,
+.video-container:-moz-full-screen iframe,
+.video-container:-moz-full-screen .video-mask,
+.video-container:-ms-fullscreen iframe,
+.video-container:-ms-fullscreen .video-mask {
+    width: 100vw !important;
+    height: 100vh !important;
+    object-fit: cover !important; /* Убирает черные поля, масштабируя видео под экран */
+}
         .controls { margin-top: 20px; display: flex; justify-content: center; gap: 15px; }
         .btn {
             background-color: #0284c7; color: white; border: none; padding: 12px 24px;
@@ -124,23 +84,13 @@
     <div class="live-badge">Прямой эфир</div>
     <div class="subtitle" id="currentTrack">Загрузка эфира...</div>
 
-    <div class="main-broadcast-layout">
-        
-        <!-- Плеер -->
-        <div class="video-container">
-            <div class="video-mask"></div>
-            <iframe id="tv-player" allow="autoplay; fullscreen" allowfullscreen></iframe>
-        </div>
-
-        <!-- Готовый чат без регистраций -->
-        <div class="chat-container">
-            <iframe src="https://minnit.chat" allow="geolocation; microphone; camera; fullscreen" style="border:none; width:100%; height:480px;"></iframe>
-        </div>
-
+    <div class="video-container">
+        <div class="video-mask"></div>
+        <iframe id="tv-player" allow="autoplay; fullscreen" allowfullscreen></iframe>
     </div>
 
     <div class="controls">
-        <button class="btn" id="muteBtn">🔇 Вкл звук</button>
+        <button class="btn" id="muteBtn">🔇 Включить звук</button>
         <button class="btn" id="fullscreenBtn">📺 Полный экран</button>
     </div>
 
@@ -243,10 +193,10 @@
             isMuted = !isMuted;
             
             if (isMuted) {
-                this.innerHTML = "🔇 Вкл звук";
+                this.innerHTML = "🇲🇺 Включить звук";
                 playerIframe.contentWindow.postMessage('{"event":"command","func":"mute","args":""}', '*');
             } else {
-                this.innerHTML = "🔊 Выкл звук";
+                this.innerHTML = "🔊 Выключить звук";
                 playerIframe.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
             }
         });
@@ -255,6 +205,12 @@
             const container = document.querySelector('.video-container');
             if (container.requestFullscreen) container.requestFullscreen();
             else if (container.webkitRequestFullscreen) container.webkitRequestFullscreen();
+            else if (container.mozRequestFullScreen) container.mozRequestFullScreen();
+            else if (container.msRequestFullscreen) container.msRequestFullscreen();
         });
 
         updateLiveBroadcast();
+        setInterval(updateLiveBroadcast, 5000);
+    </script>
+</body>
+</html>
