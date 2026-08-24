@@ -47,7 +47,7 @@
             overflow: hidden;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
         }
-        /* Маска блокирует клики, скрывая управление YouTube */
+        /* Защитный слой полностью блокирует клики, паузу и перемотку Ютуба */
         .video-mask { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 30; background: transparent; }
         
         iframe { width: 100% !important; height: 480px !important; border: none; display: block; }
@@ -87,7 +87,7 @@
         • Онлайн: <span class="online-number" id="onlineCount">Загрузка...</span> чел.
     </div>
 
-    <!-- Базы Firebase -->
+    <!-- Подключаем Firebase -->
     <script src="https://gstatic.com"></script>
     <script src="https://gstatic.com"></script>
 
@@ -123,6 +123,7 @@
             document.getElementById('onlineCount').textContent = "1";
         }
 
+        // Твой оригинальный список мультфильмов
         const playlist = [
             { id: 'AlR0fQsm83Y', title: 'Смешарики. Начало', duration: 5400 },
             { id: 'xfFu4P2FZZc', title: 'Смешарики. Легенда о золотом драконе', duration: 4790 },
@@ -132,7 +133,7 @@
         
         const introId = 'UbY3QIM69Ho';
         const totalDuration = playlist.reduce((sum, item) => sum + item.duration, 0);
-        let isMuted = true; // По умолчанию запускаем без звука, чтобы обойти блок браузера
+        let isMuted = true; // По умолчанию Mute для обхода автоблокировок в Chrome
 
         function updateLiveBroadcast() {
             const currentTimestamp = Math.floor(Date.now() / 1000);
@@ -143,7 +144,7 @@
             const playerIframe = document.getElementById('tv-player');
             const muteParam = isMuted ? 1 : 0;
 
-            // Заставка каждые 30 минут
+            // Рекламная заставка каждые 30 минут
             if ((minutes === 0 || minutes === 30) && seconds < 11) {
                 const introUrl = `https://youtube.com{introId}?controls=0&modestbranding=1&rel=0&autoplay=1&mute=${muteParam}&enablejsapi=1`;
                 if (playerIframe.src !== introUrl) {
@@ -153,7 +154,7 @@
                 return;
             }
 
-            // Фильм по расписанию
+            // Точный расчет идущего сейчас фильма
             let timeInCycle = currentTimestamp % totalDuration;
             let currentMovie = playlist[0];
             let startSeconds = 0;
@@ -167,7 +168,7 @@
                 timeInCycle -= playlist[i].duration;
             }
 
-            // Исправленная и точная ссылка на видео
+            // ПРАВИЛЬНАЯ ССЫЛКА БЕЗ СИНТАКСИЧЕСКИХ ОШИБОК
             const movieUrl = `https://youtube.com{currentMovie.id}?controls=0&modestbranding=1&rel=0&autoplay=1&start=${startSeconds}&mute=${muteParam}&enablejsapi=1`;
             
             if (!playerIframe.src.includes(currentMovie.id)) {
@@ -176,18 +177,16 @@
             }
         }
 
-        // Логика работы кнопки звука
+        // Логика переключения звука через postMessage API
         document.getElementById('muteBtn').addEventListener('click', function() {
             const playerIframe = document.getElementById('tv-player');
             isMuted = !isMuted;
             
             if (isMuted) {
                 this.innerHTML = "🔇 Включить звук";
-                // Отправляем команду mute плееру YouTube через API
                 playerIframe.contentWindow.postMessage('{"event":"command","func":"mute","args":""}', '*');
             } else {
                 this.innerHTML = "🔊 Выключить звук";
-                // Отправляем команду unmute плееру YouTube через API
                 playerIframe.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
             }
         });
@@ -198,7 +197,6 @@
         });
 
         updateLiveBroadcast();
-        // Раз в 5 секунд сверяем расписание фильмов
         setInterval(updateLiveBroadcast, 5000);
     </script>
 </body>
