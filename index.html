@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ВЕТЕР ТВ</title>
+    <title>Ветер тв - Прямой эфир</title>
     <style>
         body {
             background-color: #0d1117;
@@ -29,8 +29,9 @@
 
         .sub-title {
             color: #8b949e;
-            font-size: 12px;
+            font-size: 13px;
             margin-bottom: 25px;
+            font-weight: 500;
         }
 
         .player-container {
@@ -79,7 +80,6 @@
             color: #ffffff;
         }
 
-        /* Стили блока подвала (онлайн и чат) */
         .footer-block {
             width: 90%;
             max-width: 854px;
@@ -125,39 +125,71 @@
     <h1>ВЕТЕР ТВ</h1>
     <div class="sub-title" id="status-text">Запуск трансляции...</div>
 
-    <!-- ТВОЙ ПЛЕЕР ЮТУБА С ЗАСТАВКОЙ -->
+    <!-- КОНТЕЙНЕР ПЛЕЕРА -->
     <div class="player-container">
-        <!-- Твоя заставка UbY3QIM69Ho подгрузится сразу с автозапуском -->
-        <iframe id="tv-player" src="https://youtube.com" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        <iframe id="tv-player" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
     </div>
 
-    <!-- ТВОИ РОДНЫЕ КНОПКИ УПРАВЛЕНИЯ -->
+    <!-- КНОПКИ УПРАВЛЕНИЯ -->
     <div class="controls">
         <button class="btn" onclick="toggleMute()">🔇 Включить звук</button>
         <button class="btn" onclick="goFullscreen()">📺 Во весь экран</button>
     </div>
 
-    <!-- НОВЫЙ БЕЗОПАСНЫЙ ЧАТ И СЧЕТЧИК -->
+    <!-- ЧАТ И СЧЕТЧИК -->
     <div class="footer-block">
-        
-        <!-- ОДИН красивый счетчик онлайна -->
         <div class="counter-box">
             <p class="counter-title">🔴 СЕЙЧАС СМОТРЯТ ВЕТЕР ТВ:</p>
-            <span id="online-counter">2</span>
+            <span id="online-counter">1</span>
         </div>
 
-        <!-- Живой стабильный чат для зрителей -->
         <div class="chat-title">💬 ЧАТ ЭФИРА ВЕТЕР ТВ:</div>
         <iframe src="https://tlk.io" width="100%" height="350" style="border: 1px solid #21262d; border-radius: 12px; background: #0d1117;" frameborder="0"></iframe>
-
     </div>
 
     <script>
+        const myIntroID = 'UbY3QIM69Ho'; // Твоя заставка (11 секунд)
+        
+        // Твой оригинальный рабочий список фильмов со скриншотов
+        const marathonPlaylist = [
+            { id: 'bAqLx_E9bYw', duration: 5234, title: 'Смешарики. Начало' },
+            { id: '2S50xKldJn0', duration: 4920, title: 'Смешарики. Легенда о золотом драконе' },
+            { id: 'VzZXcr8YmVo', duration: 5160, title: 'Смешарики. Дежавю' },
+            { id: 'gs-MZg77o6w', duration: 5035, title: 'Смешарики снимают кино' }
+        ];
+
         let playerIframe = document.getElementById('tv-player');
         let statusBlock = document.getElementById('status-text');
         let isMuted = true;
+        let currentTrackIndex = 0;
 
-        // Код кнопок звука и фуллскрина
+        // Функция запуска трансляции: сначала заставка, строго через 11 секунд — первый фильм
+        function startBroadcast() {
+            // Включаем заставку
+            if (statusBlock) statusBlock.innerText = "В эфире: Фирменная заставка Ветер ТВ";
+            playerIframe.src = "https://youtube.com" + myIntroID + "?autoplay=1&mute=" + (isMuted ? 1 : 0);
+            
+            // Ровно через 11 секунд (11000 мс) заставка кончится и включится марафон Смешариков!
+            setTimeout(function() {
+                playMovie(0);
+            }, 11000);
+        }
+
+        function playMovie(index) {
+            if (index >= marathonPlaylist.length) index = 0; // Крутим список по кругу
+            currentTrackIndex = index;
+            let movie = marathonPlaylist[index];
+            
+            if (statusBlock) statusBlock.innerText = "В эфире: " + movie.title + " 🍿";
+            playerIframe.src = "https://youtube.com" + movie.id + "?autoplay=1&mute=" + (isMuted ? 1 : 0);
+            
+            // Таймер переключения на следующий фильм, когда кончится текущий
+            setTimeout(function() {
+                playMovie(currentTrackIndex + 1);
+            }, movie.duration * 1000);
+        }
+
+        // Логика кастомных кнопок звука и фуллскрина
         function toggleMute() {
             let btn = document.querySelector('.btn');
             if (isMuted) {
@@ -179,23 +211,21 @@
             else if (container.msRequestFullscreen) container.msRequestFullscreen();
         }
 
-        // Автоматическое обновление статуса трансляции
-        setTimeout(function() {
-            if(statusBlock) statusBlock.innerText = "В эфире: Смешарики Марафон 🍿";
-        }, 3000);
-
-        // Скрипт живого онлайна (без дублирования страниц)
+        // Инициализация живого счетчика онлайна
         function simulateOnline() {
             let counter = document.getElementById('online-counter');
             if (!counter) return;
             let current = parseInt(counter.innerText);
-            let change = Math.floor(Math.random() * 3) - 1; // -1, 0 или +1
+            let change = Math.floor(Math.random() * 3) - 1;
             let newOnline = current + change;
             if (newOnline < 1) newOnline = 1;
             if (newOnline > 5) newOnline = 4;
             counter.innerText = newOnline;
         }
         setInterval(simulateOnline, 8000);
+
+        // Запускаем эфир при загрузке страницы
+        window.onload = startBroadcast;
     </script>
 
 </body>
