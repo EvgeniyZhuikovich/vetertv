@@ -51,19 +51,6 @@
         
         iframe { width: 100% !important; height: 480px !important; border: none; display: block; }
         
-/* Жесткое растягивание самого видео на весь экран без черных полос */
-.video-container:fullscreen iframe,
-.video-container:fullscreen .video-mask,
-.video-container:-webkit-full-screen iframe,
-.video-container:-webkit-full-screen .video-mask,
-.video-container:-moz-full-screen iframe,
-.video-container:-moz-full-screen .video-mask,
-.video-container:-ms-fullscreen iframe,
-.video-container:-ms-fullscreen .video-mask {
-    width: 100vw !important;
-    height: 100vh !important;
-    object-fit: cover !important; /* Убирает черные поля, масштабируя видео под экран */
-}
         .controls { margin-top: 20px; display: flex; justify-content: center; gap: 15px; }
         .btn {
             background-color: #0284c7; color: white; border: none; padding: 12px 24px;
@@ -133,6 +120,7 @@
             document.getElementById('onlineCount').textContent = "1";
         }
 
+        // ТУТ БОЛЬШЕ НЕТ КРИВЫХ КЛЮЧЕЙ
         const playlist = [
             { id: 'AlR0fQsm83Y', title: 'Смешарики. Начало', duration: 5400 },
             { id: 'xfFu4P2FZZc', title: 'Смешарики. Легенда о золотом драконе', duration: 4790 },
@@ -193,7 +181,7 @@
             isMuted = !isMuted;
             
             if (isMuted) {
-                this.innerHTML = "🇲🇺 Включить звук";
+                this.innerHTML = "🔇 Включить звук";
                 playerIframe.contentWindow.postMessage('{"event":"command","func":"mute","args":""}', '*');
             } else {
                 this.innerHTML = "🔊 Выключить звук";
@@ -204,9 +192,6 @@
         document.getElementById('fullscreenBtn').addEventListener('click', function() {
             const container = document.querySelector('.video-container');
             if (container.requestFullscreen) container.requestFullscreen();
-            else if (container.webkitRequestFullscreen) container.webkitRequestFullscreen();
-            else if (container.mozRequestFullScreen) container.mozRequestFullScreen();
-            else if (container.msRequestFullscreen) container.msRequestFullscreen();
         });
 
         updateLiveBroadcast();
