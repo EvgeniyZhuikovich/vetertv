@@ -36,7 +36,7 @@
         @keyframes blink { 50% { opacity: 0.5; } }
         .subtitle { font-size: 1.2rem; color: #94a3b8; margin-bottom: 25px; font-weight: 500; }
         
-        /* Жёстко задаем высоту, чтобы контейнер не схлопывался */
+        /* Фиксированное окно, которое не исчезнет */
         .video-container {
             position: relative;
             width: 850px;
@@ -50,7 +50,7 @@
         }
         .video-mask { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 30; background: transparent; }
         
-        /* Заставляем iframe занимать всю высоту контейнера */
+        /* Размеры для самого плеера внутри окна */
         iframe, #player, #introPlayer { width: 100% !important; height: 480px !important; border: none; display: block; }
         
         #intro-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; display: none; background: #000; }
@@ -66,27 +66,9 @@
             display: inline-block; padding: 8px 20px; border-radius: 20px; border: 1px solid #334155;
         }
         .online-number { color: #22c55e; font-weight: bold; text-shadow: 0 0 10px rgba(34, 197, 94, 0.2); }
-        
-        /* Кнопка запуска */
-        #start-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #1e293b;
-            z-index: 40;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .start-btn {
-            background-color: #ef4444; color: white; padding: 16px 36px;
-            font-size: 1.5rem; font-weight: bold; border: none; border-radius: 50px;
-            cursor: pointer; box-shadow: 0 0 20px rgba(239, 68, 68, 0.6); transition: 0.2s;
-        }
-        .start-btn:hover { transform: scale(1.05); background-color: #dc2626; }
     </style>
+    <!-- Безотказная мгновенная загрузка YouTube API -->
+    <script src="https://youtube.com"></script>
 </head>
 <body>
 
@@ -95,9 +77,6 @@
     <div class="subtitle" id="currentTrack">Загрузка эфира...</div>
 
     <div class="video-container">
-        <div id="start-screen">
-            <button class="start-btn" onclick="startBroadcast()">📺 Включить ТВ</button>
-        </div>
         <div class="video-mask"></div>
         <div id="intro-container"><div id="introPlayer"></div></div>
         <div id="player"></div>
@@ -169,12 +148,6 @@
             return { index: 0, id: playlist.id, title: playlist.title, startSeconds: 0 };
         }
 
-        // Безотказное динамическое подключение скрипта YouTube API
-        const tag = document.createElement('script');
-        tag.src = "https://youtube.com";
-        const firstScriptTag = document.getElementsByTagName('script')[0];
-        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-
         function onYouTubeIframeAPIReady() {
             const live = getLiveVideo();
             mainPlayer = new YT.Player('player', {
@@ -193,6 +166,9 @@
         }
 
         function onMainPlayerReady(event) {
+            // Браузеры требуют сначала запустить видео без звука. Видео начнет проигрываться само.
+            event.target.playVideo();
+
             document.getElementById('muteBtn').addEventListener('click', function() {
                 if (mainPlayer.isMuted()) {
                     mainPlayer.unMute();
@@ -212,15 +188,6 @@
             setInterval(checkIntroTiming, 1000);
         }
 
-        function startBroadcast() {
-            document.getElementById('start-screen').style.display = 'none';
-            if(mainPlayer && mainPlayer.playVideo) {
-                mainPlayer.unMute();
-                mainPlayer.playVideo();
-                document.getElementById('muteBtn').innerHTML = "🔊 Выключить звук";
-            }
-        }
-
         function onMainPlayerStateChange(event) { if (event.data === YT.PlayerState.ENDED) checkAndSwitchBroadcast(); }
 
         function checkAndSwitchBroadcast() {
@@ -229,3 +196,35 @@
             const currentVideoUrl = mainPlayer.getVideoUrl();
             if (currentVideoUrl && !currentVideoUrl.includes(live.id)) {
                 mainPlayer.loadVideoById({ videoId: live.id, startSeconds: live.startSeconds });
+                document.getElementById('currentTrack').textContent = 'Сейчас в эфире: ' + live.title;
+            }
+        }
+
+        function checkIntroTiming() {
+            const now = new Date();
+            if ((now.getMinutes() === 0 || now.getMinutes() === 30) && now.getSeconds() === 0 && !isIntroPlaying) {
+                startIntroBreak();
+            }
+        }
+
+        function startIntroBreak() {
+            isIntroPlaying = true;
+            mainPlayer.pauseVideo();
+            document.getElementById('intro-container').style.display = 'block';
+            introPlayer.seekTo(0);
+            introPlayer.playVideo();
+            const originalTitle = document.getElementById('currentTrack').textContent;
+            document.getElementById('currentTrack').textContent = '📺 Заставка телеканала Ветер ТВ';
+            setTimeout(function() {
+                introPlayer.pauseVideo();
+                document.getElementById('intro-container').style.display = 'none';
+                mainPlayer.playVideo();
+                document.getElementById('currentTrack').textContent = originalTitle;
+                isIntroPlaying = false;
+            }, 11000);
+        }
+
+        setInterval(checkAndSwitchBroadcast, 5000);
+    </script>
+</body>
+</html>
