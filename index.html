@@ -47,11 +47,9 @@
             overflow: hidden;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
         }
-        .video-mask { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 30; background: transparent; }
         
-        iframe, #player, #introPlayer { width: 100% !important; height: 480px !important; border: none; display: block; }
+        iframe { width: 100% !important; height: 480px !important; border: none; display: block; }
         
-        #intro-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 20; display: none; background: #000; }
         .controls { margin-top: 20px; display: flex; justify-content: center; gap: 15px; }
         .btn {
             background-color: #0284c7; color: white; border: none; padding: 12px 24px;
@@ -73,13 +71,11 @@
     <div class="subtitle" id="currentTrack">Загрузка эфира...</div>
 
     <div class="video-container">
-        <div class="video-mask"></div>
-        <div id="intro-container"><div id="introPlayer"></div></div>
-        <div id="player"></div>
+        <!-- Плеер создается сразу стандартным HTML-тегом, браузер его не заблокирует -->
+        <iframe id="tv-player" src="" allow="autoplay;革命; fullscreen" allowfullscreen></iframe>
     </div>
 
     <div class="controls">
-        <button class="btn" id="muteBtn">🔇 Включить звук</button>
         <button class="btn" id="fullscreenBtn">📺 Полный экран</button>
     </div>
 
@@ -87,12 +83,11 @@
         • Онлайн: <span class="online-number" id="onlineCount">Загрузка...</span> чел.
     </div>
 
-    <!-- Подключаем базы Google -->
+    <!-- Подключаем Firebase для стабильного онлайна -->
     <script src="https://gstatic.com"></script>
     <script src="https://gstatic.com"></script>
 
     <script>
-        // Твои проверенные ключи приложения school6by
         const firebaseConfig = {
             apiKey: "AIzaSyDs1PGAs9PlAifxph8FZYjjLrkwvttLTxE",
             authDomain: "://firebaseapp.com",
@@ -103,7 +98,6 @@
             appId: "1:295503050789:web:4627c77bb0d7549da0e7cc"
         };
         
-        // Запуск базы данных
         try {
             firebase.initializeApp(firebaseConfig);
             const database = firebase.database();
@@ -125,108 +119,69 @@
             document.getElementById('onlineCount').textContent = "1";
         }
 
-        // Логика плееров и плейлиста
-        let mainPlayer = null, introPlayer = null, isIntroPlaying = false, isPlayerReady = false;
+        // Список фильмов вещания
         const playlist = [
             { id: 'AlR0fQsm83Y', title: 'Смешарики. Начало', duration: 5400 },
             { id: 'xfFu4P2FZZc', title: 'Смешарики. Легенда о золотом драконе', duration: 4790 },
             { id: 'dQw4w9WgXcQ', title: 'Смешарики. ДежаВю', duration: 5100 },
             { id: '1vBgKm9qhhM', title: 'Смешарики снимают кино', duration: 5212 }
         ];
+        
+        // ID заставки
+        const introId = 'UbY3QIM69Ho';
         const totalDuration = playlist.reduce((sum, item) => sum + item.duration, 0);
 
-        function getLiveVideo() {
+        function updateLiveBroadcast() {
             const currentTimestamp = Math.floor(Date.now() / 1000);
+            const now = new Date();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            
+            const playerIframe = document.getElementById('tv-player');
+
+            // ПРОВЕРКА НА ЗАСТАВКУ: если время ровно 00 или 30 минут, включаем заставку на 11 секунд
+            if ((minutes === 0 || minutes === 30) && seconds < 11) {
+                const introUrl = `https://youtube.com{introId}?controls=0&modestbranding=1&rel=0&autoplay=1&mute=1`;
+                if (playerIframe.src !== introUrl) {
+                    playerIframe.src = introUrl;
+                    document.getElementById('currentTrack').textContent = '📺 Заставка телеканала Ветер ТВ';
+                }
+                return;
+            }
+
+            // РАСЧЕТ ТЕКУЩЕГО ФИЛЬМА
             let timeInCycle = currentTimestamp % totalDuration;
+            let currentMovie = playlist[0];
+            let startSeconds = 0;
+
             for (let i = 0; i < playlist.length; i++) {
                 if (timeInCycle < playlist[i].duration) {
-                    return { index: i, id: playlist[i].id, title: playlist[i].title, startSeconds: timeInCycle };
+                    currentMovie = playlist[i];
+                    startSeconds = timeInCycle;
+                    break;
                 }
                 timeInCycle -= playlist[i].duration;
             }
-            return { index: 0, id: playlist[0].id, title: playlist[0].title, startSeconds: 0 };
-        }
 
-        function onYouTubeIframeAPIReady() {
-            const live = getLiveVideo();
-            mainPlayer = new YT.Player('player', {
-                height: '480', width: '100%', videoId: live.id, 
-                playerVars: { 
-                    'controls': 0, 'disablekb': 1, 'rel': 0, 'modestbranding': 1, 'iv_load_policy': 3, 
-                    'start': live.startSeconds, 'mute': 1, 'autoplay': 1
-                },
-                events: { 'onReady': onMainPlayerReady, 'onStateChange': onMainPlayerStateChange }
-            });
-            introPlayer = new YT.Player('introPlayer', {
-                height: '480', width: '100%', videoId: 'UbY3QIM69Ho', 
-                playerVars: { 'controls': 0, 'disablekb': 1, 'rel': 0, 'modestbranding': 1, 'iv_load_policy': 3, 'mute': 1 }
-            });
-            document.getElementById('currentTrack').textContent = 'Сейчас в эфире: ' + live.title;
-        }
-
-        function onMainPlayerReady(event) {
-            isPlayerReady = true;
-            event.target.playVideo();
-
-            document.getElementById('muteBtn').addEventListener('click', function() {
-                if (mainPlayer && mainPlayer.isMuted && mainPlayer.isMuted()) {
-                    mainPlayer.unMute();
-                    introPlayer.unMute();
-                    this.innerHTML = "🔊 Выключить звук";
-                } else if (mainPlayer && mainPlayer.mute) {
-                    mainPlayer.mute();
-                    introPlayer.mute();
-                    this.innerHTML = "🔇 Включить звук";
-                }
-            });
-
-            document.getElementById('fullscreenBtn').addEventListener('click', function() {
-                const container = document.querySelector('.video-container');
-                if (container.requestFullscreen) container.requestFullscreen();
-            });
-            setInterval(checkIntroTiming, 1000);
-        }
-
-        function onMainPlayerStateChange(event) { if (event.data === YT.PlayerState.ENDED) checkAndSwitchBroadcast(); }
-
-        function checkAndSwitchBroadcast() {
-            if (isIntroPlaying || !isPlayerReady || !mainPlayer || !mainPlayer.getVideoUrl) return;
+            // Собираем прямую ссылку без кнопок управления YouTube (controls=0)
+            const movieUrl = `https://youtube.com{currentMovie.id}?controls=0&modestbranding=1&rel=0&start=${startSeconds}`;
             
-            const live = getLiveVideo();
-            const currentVideoUrl = mainPlayer.getVideoUrl();
-            if (currentVideoUrl && !currentVideoUrl.includes(live.id)) {
-                mainPlayer.loadVideoById({ videoId: live.id, startSeconds: live.startSeconds });
-                document.getElementById('currentTrack').textContent = 'Сейчас в эфире: ' + live.title;
+            // Загружаем видео в окно, только если оно сменилось
+            if (!playerIframe.src.includes(currentMovie.id)) {
+                playerIframe.src = movieUrl;
+                document.getElementById('currentTrack').textContent = 'Сейчас в эфире: ' + currentMovie.title;
             }
         }
 
-        function checkIntroTiming() {
-            if (!isPlayerReady || !mainPlayer || isIntroPlaying) return;
-            const now = new Date();
-            if ((now.getMinutes() === 0 || now.getMinutes() === 30) && now.getSeconds() === 0) {
-                startIntroBreak();
-            }
-        }
+        // Кнопка полного экрана
+        document.getElementById('fullscreenBtn').addEventListener('click', function() {
+            const container = document.querySelector('.video-container');
+            if (container.requestFullscreen) container.requestFullscreen();
+        });
 
-        function startIntroBreak() {
-            isIntroPlaying = true;
-            mainPlayer.pauseVideo();
-            document.getElementById('intro-container').style.display = 'block';
-            introPlayer.seekTo(0);
-            introPlayer.playVideo();
-            const originalTitle = document.getElementById('currentTrack').textContent;
-            document.getElementById('currentTrack').textContent = '📺 Заставка телеканала Ветер ТВ';
-            setTimeout(function() {
-                introPlayer.pauseVideo();
-                document.getElementById('intro-container').style.display = 'none';
-                mainPlayer.playVideo();
-                document.getElementById('currentTrack').textContent = originalTitle;
-                isIntroPlaying = false;
-            }, 11000);
-        }
-
-        setTimeout(() => {
-            setInterval(checkAndSwitchBroadcast, 5000);
-        }, 3000);
+        // Запускаем эфир сразу и проверяем расписание каждые 5 секунд
+        updateLiveBroadcast();
+        setInterval(updateLiveBroadcast, 5000);
     </script>
-
+</body>
+</html>
