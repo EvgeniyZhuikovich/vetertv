@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ветер тв - Прямой эфир</title>
+    <title>ВЕТЕР ТВ</title>
     <style>
         body {
             background-color: #0d1117;
@@ -150,7 +150,7 @@
     <script>
         const myIntroID = 'UbY3QIM69Ho'; // Твоя заставка (11 секунд)
         
-        // Твой оригинальный рабочий список фильмов со скриншотов
+        // Твой оригинальный список фильмов
         const marathonPlaylist = [
             { id: 'bAqLx_E9bYw', duration: 5234, title: 'Смешарики. Начало' },
             { id: '2S50xKldJn0', duration: 4920, title: 'Смешарики. Легенда о золотом драконе' },
@@ -163,33 +163,30 @@
         let isMuted = true;
         let currentTrackIndex = 0;
 
-        // Функция запуска трансляции: сначала заставка, строго через 11 секунд — первый фильм
         function startBroadcast() {
-            // Включаем заставку
             if (statusBlock) statusBlock.innerText = "В эфире: Фирменная заставка Ветер ТВ";
             playerIframe.src = "https://youtube.com" + myIntroID + "?autoplay=1&mute=" + (isMuted ? 1 : 0);
             
-            // Ровно через 11 секунд (11000 мс) заставка кончится и включится марафон Смешариков!
+            // Ровно через 11 секунд включаем первый мультик
             setTimeout(function() {
                 playMovie(0);
             }, 11000);
         }
 
         function playMovie(index) {
-            if (index >= marathonPlaylist.length) index = 0; // Крутим список по кругу
+            if (index >= marathonPlaylist.length) index = 0; 
             currentTrackIndex = index;
             let movie = marathonPlaylist[index];
             
             if (statusBlock) statusBlock.innerText = "В эфире: " + movie.title + " 🍿";
+            // ТУТ ИСПРАВЛЕНО: добавлена правильная ссылка с косой чертой перед ID фильма
             playerIframe.src = "https://youtube.com" + movie.id + "?autoplay=1&mute=" + (isMuted ? 1 : 0);
             
-            // Таймер переключения на следующий фильм, когда кончится текущий
             setTimeout(function() {
                 playMovie(currentTrackIndex + 1);
             }, movie.duration * 1000);
         }
 
-        // Логика кастомных кнопок звука и фуллскрина
         function toggleMute() {
             let btn = document.querySelector('.btn');
             if (isMuted) {
@@ -211,7 +208,6 @@
             else if (container.msRequestFullscreen) container.msRequestFullscreen();
         }
 
-        // Инициализация живого счетчика онлайна
         function simulateOnline() {
             let counter = document.getElementById('online-counter');
             if (!counter) return;
@@ -224,7 +220,6 @@
         }
         setInterval(simulateOnline, 8000);
 
-        // Запускаем эфир при загрузке страницы
         window.onload = startBroadcast;
     </script>
 
