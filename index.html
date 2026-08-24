@@ -253,18 +253,40 @@
         // Обновляем цифру каждые 10 секунд
         setInterval(simulateOnline, 10000);
     </script>
-    <!-- ПОДКЛЮЧАЕМ API ЮТУБА ДЛЯ НАШИХ КНОПОК -->
-<script src="https://youtube.com"></script>
-<!-- 4. ЖИВОЙ ЧАТ ДЛЯ ВСЕХ ЗРИТЕЛЕЙ -->
+ <!-- ЖИВОЙ ЧАТ И СЧЕТЧИК ОНЛАЙНА ВЕТЕР ТВ -->
 <div style="text-align: center; margin: 25px auto; max-width: 854px; font-family: sans-serif;">
-    <h3 style="color: white; margin-bottom: 10px; font-size: 16px; text-align: left; padding-left: 10px;">💬 ЧАТ ЭФИРА ВЕТЕР ТВ:</h3>
-  <iframe src="https://chatango.com" width="100%" height="350" style="border: 1px solid #222; border-radius: 12px; background: #000;" frameborder="0" scrolling="no"></iframe>
+    
+    <!-- Твой любимый счетчик онлайна -->
+    <div style="margin-bottom: 25px; padding: 15px; background: #1a1a1a; border-radius: 8px; max-width: 400px; margin-left: auto; margin-right: auto;">
+        <p style="color: #aaa; font-size: 14px; margin: 0 0 10px 0; font-weight: bold;">🔴 СЕЙЧАС СМОТРЯТ ВЕТЕР ТВ:</p>
+        <span id="online-counter" style="color: #46d369; font-size: 24px; font-weight: bold; font-family: monospace;">1</span>
+    </div>
+
+    <!-- Заголовок и новый красивый чат -->
+    <h3 style="color: white; margin-bottom: 15px; font-size: 16px; text-align: left; padding-left: 10px;">💬 ЧАТ ЭФИРА ВЕТЕР ТВ:</h3>
+    <iframe src="https://minnit.chat" width="100%" height="380" style="border: 1px solid #222; border-radius: 12px; background: #141414;" frameborder="0" allowTransparency="true"></iframe>
 
 </div>
+
+<script>
+    // Скрипт живого онлайна (обновление каждые 10 секунд)
+    function simulateOnline() {
+        let counter = document.getElementById('online-counter');
+        if (!counter) return;
+        let current = parseInt(counter.innerText);
+        let change = Math.floor(Math.random() * 3) - 1; // -1, 0 или +1
+        let newOnline = current + change;
+        if (newOnline < 1) newOnline = 1;
+        if (newOnline > 5) newOnline = 4;
+        counter.innerText = newOnline;
+    }
+    setInterval(simulateOnline, 10000);
+</script>
+
 <style>
     @keyframes blinker { 50% { opacity: 0; } }
 </style>
-<!-- КОНЕЦ СИСТЕМЫ ВЕТЕР ТВ -->
+<!-- КОНЕЦ БЛОКА -->
 </div>
 </body>
 </html>
