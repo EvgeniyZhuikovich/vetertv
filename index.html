@@ -103,24 +103,16 @@
             font-weight: bold;
             letter-spacing: 1px;
         }
-
-        #online-counter {
-            color: #3fb950;
-            font-size: 26px;
-            font-weight: bold;
-            font-family: monospace;
-        }
     </style>
 </head>
 <body>
 
     <h1>ВЕТЕР ТВ</h1>
-    <div class="sub-title" id="status-text">В эфире: Смешарики Марафон 🍿</div>
+    <div class="sub-title" id="status-text">Запуск эфира...</div>
 
-    <!-- КОНТЕЙНЕР ПЛЕЕРА -->
+    <!-- ЭКРАН ТЕЛЕВИЗОРА -->
     <div class="player-container">
-        <!-- Твой плеер, в который сразу встроен весь плейлист из твоих 4 фильмов. Они будут играть друг за другом по кругу сами! -->
-        <iframe id="tv-player" src="https://youtube.com" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        <iframe id="tv-player" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
     </div>
 
     <!-- КНОПКИ УПРАВЛЕНИЯ -->
@@ -129,34 +121,88 @@
         <button class="btn" onclick="goFullscreen()">📺 Во весь экран</button>
     </div>
 
-    <!-- СЧЕТЧИК ОНЛАЙНА -->
+    <!-- НАСТОЯЩИЙ ЧЕСТНЫЙ ОНЛАЙН -->
     <div class="footer-block">
         <div class="counter-box">
             <p class="counter-title">🔴 СЕЙЧАС СМОТРЯТ ВЕТЕР ТВ:</p>
-            <span id="online-counter">1</span>
+            <a href="https://amung.us"><img src="https://amung.us" width="80" height="15" border="0" alt="real online"></a>
         </div>
     </div>
 
     <script>
-        let playerIframe = document.getElementById('tv-player');
-        let isMuted = true;
+        const myIntroID = 'UbY3QIM69Ho'; // Твоя заставка
+        
+        const marathonPlaylist = [
+            { id: 'AlR0fQsm83Y', duration: 5234, title: 'Смешарики. Начало' },
+            { id: 'xfFu4P2FZZc', duration: 4920, title: 'Смешарики. Легенда о золотом драконе' },
+            { id: '1vBgKm9qhhM', duration: 5160, title: 'Смешарики. Дежавю' },
+            { id: 'gs-MZg77o6w', duration: 5035, title: 'Смешарики снимают кино' }
+        ];
 
-        // Безопасная функция звука на основе готового плейлиста
+        let playerIframe = document.getElementById('tv-player');
+        let statusBlock = document.getElementById('status-text');
+        let currentVideoID = myIntroID;
+        let isMuted = true;
+        let currentTrackIndex = 0;
+        let isIntroPlaying = false;
+        let movieTimeout = null;
+
+        function startBroadcast() {
+            playMovie(0);
+            setInterval(checkHourlyIntro, 1000);
+        }
+
+        function playMovie(index) {
+            if (isIntroPlaying) return; 
+            if (index >= marathonPlaylist.length) index = 0; 
+            currentTrackIndex = index;
+            
+            let movie = marathonPlaylist[index];
+            currentVideoID = movie.id;
+            
+            if (statusBlock) statusBlock.innerText = "В эфире: " + movie.title + " 🍿";
+            playerIframe.src = "https://youtube.com" + movie.id + "?autoplay=1&mute=" + (isMuted ? 1 : 0);
+            
+            if (movieTimeout) clearTimeout(movieTimeout);
+            movieTimeout = setTimeout(function() {
+                playMovie(currentTrackIndex + 1);
+            }, movie.duration * 1000);
+        }
+
+        function checkHourlyIntro() {
+            let now = new Date();
+            let minutes = now.getMinutes();
+            let seconds = now.getSeconds();
+
+            // Ровно в 00 минут и 00 секунд нового часа прерываем поток заставкой
+            if (minutes === 0 && seconds === 0 && !isIntroPlaying) {
+                isIntroPlaying = true;
+                if (movieTimeout) clearTimeout(movieTimeout); 
+
+                if (statusBlock) statusBlock.innerText = "🚨 ЧАСОВОЙ ВЫПУСК: Заставка Ветер ТВ";
+                currentVideoID = myIntroID;
+                playerIframe.src = "https://youtube.com" + myIntroID + "?autoplay=1&mute=" + (isMuted ? 1 : 0);
+
+                // ТУТ НАСТРОЕНО: Ровно 11 секунд заставки (11000 миллисекунд)
+                setTimeout(function() {
+                    isIntroPlaying = false;
+                    playMovie(currentTrackIndex); 
+                }, 11000);
+            }
+        }
+
         function toggleMute() {
             let btn = document.getElementById('mute-btn');
             isMuted = !isMuted;
             
             if (!isMuted) {
-                playerIframe.src = playerIframe.src.replace('mute=1', 'mute=0');
                 btn.innerHTML = "🔊 Выключить звук";
             } else {
-                playerIframe.src = playerIframe.src.replace('mute=0', 'mute=1');
                 btn.innerHTML = "🔇 Включить звук";
-                isMuted = true;
             }
+            playerIframe.src = "https://youtube.com" + currentVideoID + "?autoplay=1&mute=" + (isMuted ? 1 : 0);
         }
 
-        // Кнопка во весь экран
         function goFullscreen() {
             let container = document.querySelector('.player-container');
             if (container.requestFullscreen) container.requestFullscreen();
@@ -165,18 +211,7 @@
             else if (container.msRequestFullscreen) container.msRequestFullscreen();
         }
 
-        // Обновление онлайна
-        function simulateOnline() {
-            let counter = document.getElementById('online-counter');
-            if (!counter) return;
-            let current = parseInt(counter.innerText);
-            let change = Math.floor(Math.random() * 3) - 1;
-            let newOnline = current + change;
-            if (newOnline < 1) newOnline = 1;
-            if (newOnline > 5) newOnline = 4;
-            counter.innerText = newOnline;
-        }
-        setInterval(simulateOnline, 8000);
+        window.onload = startBroadcast;
     </script>
 
 </body>
