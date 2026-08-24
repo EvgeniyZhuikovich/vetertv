@@ -75,7 +75,7 @@
     </div>
 
     <div class="controls">
-        <button class="btn" id="muteBtn">🔇 Вкл/Выкл звук</button>
+        <button class="btn" id="muteBtn">🔊 Выключить звук</button>
         <button class="btn" id="fullscreenBtn">📺 Полный экран</button>
     </div>
 
@@ -83,42 +83,46 @@
         • Онлайн: <span class="online-number" id="onlineCount">Загрузка...</span> чел.
     </div>
 
-    <!-- Подключаем Firebase библиотеки для работы счетчика -->
     <script src="https://gstatic.com"></script>
     <script src="https://gstatic.com"></script>
-
     <script src="https://youtube.com"></script>
+
     <script>
-        // === ТВОИ РЕАЛЬНЫЕ НАСТРОЙКИ FIREBASE ===
+        // Твоя конфигурация Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyDs1PGAs9PlAifxph8FZYjjLrkwvttLTxE",
-            authDomain: "school6by.firebaseapp.com",
-            databaseURL: "https://firebaseio.com", // Ссылка на твою базу данных
+            authDomain: "://firebaseapp.com",
+            databaseURL: "https://firebaseio.com",
             projectId: "school6by",
             storageBucket: "school6by.firebasestorage.app",
             messagingSenderId: "295503050789",
             appId: "1:295503050789:web:4627c77bb0d7549da0e7cc"
         };
         
-        // Инициализация базы данных онлайна
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-        const onlineRef = database.ref('.info/connected');
-        const myPresenceRef = database.ref('online_users').push();
+        // Старт базы данных для счетчика
+        try {
+            firebase.initializeApp(firebaseConfig);
+            const database = firebase.database();
+            const onlineRef = database.ref('.info/connected');
+            const myPresenceRef = database.ref('online_users').push();
 
-        onlineRef.on('value', (snapshot) => {
-            if (snapshot.val() === true) {
-                myPresenceRef.set(true);
-                myPresenceRef.onDisconnect().remove();
-            }
-        });
+            onlineRef.on('value', (snapshot) => {
+                if (snapshot.val() === true) {
+                    myPresenceRef.set(true);
+                    myPresenceRef.onDisconnect().remove();
+                }
+            });
 
-        database.ref('online_users').on('value', (snapshot) => {
-            const count = snapshot.numChildren();
-            document.getElementById('onlineCount').textContent = count;
-        });
+            database.ref('online_users').on('value', (snapshot) => {
+                const count = snapshot.numChildren();
+                document.getElementById('onlineCount').textContent = count || 1;
+            });
+        } catch(e) {
+            console.log("Ошибка базы данных.");
+            document.getElementById('onlineCount').textContent = "1";
+        }
 
-        // === ПЛЕЕР И ТВ-РАСПИСАНИЕ ===
+        // Плееры YouTube и Сетка вещания
         let mainPlayer, introPlayer, isIntroPlaying = false;
         const playlist = [
             { id: 'AlR0fQsm83Y', title: 'Смешарики. Начало', duration: 5400 },
@@ -156,10 +160,20 @@
 
         function onMainPlayerReady(event) {
             event.target.playVideo();
+            
+            // Логика переключения текста на кнопке звука
             document.getElementById('muteBtn').addEventListener('click', function() {
-                if (mainPlayer.isMuted()) { mainPlayer.unMute(); introPlayer.unMute(); } 
-                else { mainPlayer.mute(); introPlayer.mute(); }
+                if (mainPlayer.isMuted()) {
+                    mainPlayer.unMute();
+                    introPlayer.unMute();
+                    this.innerHTML = "🔊 Выключить звук";
+                } else {
+                    mainPlayer.mute();
+                    introPlayer.mute();
+                    this.innerHTML = "🔇 Включить звук";
+                }
             });
+
             document.getElementById('fullscreenBtn').addEventListener('click', function() {
                 const container = document.querySelector('.video-container');
                 if (container.requestFullscreen) container.requestFullscreen();
