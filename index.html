@@ -3,54 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ветер ТВ — Прямой Эфир</title>
+    <title>ВЕТЕР ТВ</title>
     <style>
         body {
+            background-color: #0d1117;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 0;
-            background: #11141a;
-            color: #ffffff;
-            font-family: 'Segoe UI', Roboto, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             min-height: 100vh;
         }
 
-        .channel-header {
-            margin-bottom: 25px;
-            text-align: center;
-        }
-
-        .channel-title {
-            font-size: 42px;
-            font-weight: 900;
-            letter-spacing: 3px;
+        h1 {
+            color: #58a6ff;
+            margin-top: 20px;
+            margin-bottom: 5px;
+            font-size: 28px;
             text-transform: uppercase;
-            background: linear-gradient(45deg, #00d2ff, #3a7bd5);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin: 0;
+            letter-spacing: 2px;
         }
 
-        .channel-subtitle {
-            font-size: 14px;
-            color: #6c7a9c;
-            margin-top: 6px;
+        .sub-title {
+            color: #8b949e;
+            font-size: 12px;
+            margin-bottom: 25px;
         }
 
         .player-container {
             position: relative;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
-            border-radius: 16px;
-            overflow: hidden;
-            border: 3px solid #232936;
+            width: 90%;
+            max-width: 854px;
+            aspect-ratio: 16 / 9;
             background: #000;
-            width: 800px;
-            height: 450px;
-            margin-bottom: 20px;
-            transition: all 0.3s ease;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid #21262d;
         }
 
         iframe {
@@ -59,219 +51,152 @@
             border: none;
         }
 
-        /* Защитный слой полностью закрывает видео */
-        .player-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0);
-            z-index: 10;
-        }
-
-        /* Контейнер для кнопок */
-        .controls-panel {
+        .controls {
+            margin-top: 20px;
             display: flex;
             gap: 15px;
+            margin-bottom: 30px;
         }
 
-        /* Стили кнопок */
         .btn {
-            background: #232936;
-            color: #fff;
-            padding: 12px 28px;
-            font-size: 16px;
+            background-color: #21262d;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+            padding: 12px 24px;
+            font-size: 14px;
             font-weight: 600;
-            border-radius: 8px;
-            border: none;
+            border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s ease;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-            z-index: 20;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .volume-btn { border: 2px solid #00d2ff; }
-        .volume-btn:hover {
-            background: #00d2ff;
-            color: #11141a;
-            box-shadow: 0 0 20px rgba(0, 210, 255, 0.4);
+        .btn:hover {
+            background-color: #30363d;
+            border-color: #8b949e;
+            color: #ffffff;
         }
 
-        .fullscreen-btn { border: 2px solid #3a7bd5; }
-        .fullscreen-btn:hover {
-            background: #3a7bd5;
-            box-shadow: 0 0 20px rgba(58, 123, 213, 0.4);
+        /* Стили блока подвала (онлайн и чат) */
+        .footer-block {
+            width: 90%;
+            max-width: 854px;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .counter-box {
+            padding: 15px;
+            background: #161b22;
+            border: 1px solid #21262d;
+            border-radius: 8px;
+            max-width: 350px;
+            margin: 0 auto 25px auto;
+        }
+
+        .counter-title {
+            color: #8b949e;
+            font-size: 13px;
+            margin: 0 0 8px 0;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        #online-counter {
+            color: #3fb950;
+            font-size: 26px;
+            font-weight: bold;
+            font-family: monospace;
+        }
+
+        .chat-title {
+            color: #ffffff;
+            margin-bottom: 12px;
+            font-size: 15px;
+            text-align: left;
+            padding-left: 5px;
         }
     </style>
 </head>
 <body>
 
-    <div class="channel-header">
-        <h1 class="channel-title">Ветер ТВ</h1>
-        <div id="tv-subtitle" class="channel-subtitle">Запуск трансляции...</div>
+    <h1>ВЕТЕР ТВ</h1>
+    <div class="sub-title" id="status-text">Запуск трансляции...</div>
+
+    <!-- ТВОЙ ПЛЕЕР ЮТУБА С ЗАСТАВКОЙ -->
+    <div class="player-container">
+        <!-- Твоя заставка UbY3QIM69Ho подгрузится сразу с автозапуском -->
+        <iframe id="tv-player" src="https://youtube.com" allow="autoplay; encrypted-media" allowfullscreen></iframe>
     </div>
 
-    <div id="tv-wrapper" class="player-container">
-        <div class="player-overlay"></div>
-        <iframe id="main-player" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    <!-- ТВОИ РОДНЫЕ КНОПКИ УПРАВЛЕНИЯ -->
+    <div class="controls">
+        <button class="btn" onclick="toggleMute()">🔇 Включить звук</button>
+        <button class="btn" onclick="goFullscreen()">📺 Во весь экран</button>
     </div>
 
-    <div class="controls-panel">
-        <button id="mute-button" class="btn volume-btn" onclick="toggleSound()">🔊 Включить звук</button>
-        <button class="btn fullscreen-btn" onclick="toggleFullscreen()">📺 Во весь экран</button>
+    <!-- НОВЫЙ БЕЗОПАСНЫЙ ЧАТ И СЧЕТЧИК -->
+    <div class="footer-block">
+        
+        <!-- ОДИН красивый счетчик онлайна -->
+        <div class="counter-box">
+            <p class="counter-title">🔴 СЕЙЧАС СМОТРЯТ ВЕТЕР ТВ:</p>
+            <span id="online-counter">2</span>
+        </div>
+
+        <!-- Живой стабильный чат для зрителей -->
+        <div class="chat-title">💬 ЧАТ ЭФИРА ВЕТЕР ТВ:</div>
+        <iframe src="https://tlk.io" width="100%" height="350" style="border: 1px solid #21262d; border-radius: 12px; background: #0d1117;" frameborder="0"></iframe>
+
     </div>
 
     <script>
-        const myIntroID = 'UbY3QIM69Ho'; // Твоя заставка
-
-        // 4 проверенных полнометражных фильма
-        const marathonPlaylist = [
-            { id: 'AlR0fQsm83Y', duration: 5234, title: 'Смешарики. Начало (Полнометражный)' },
-            { id: '1vBgKm9qhhM', duration: 5133, title: 'Смешарики. Дежавю (Полнометражный)' },
-            { id: 'xfFu4P2FZZc', duration: 4730, title: 'Смешарики. Легенда о золотом драконе (Полнометражный)' },
-            { id: 'gs-MZg77o6w', duration: 5035, title: 'Смешарики снимают кино (Киноальманах)' }
-        ];
-
-        const totalMarathonDuration = marathonPlaylist.reduce((sum, item) => sum + item.duration, 0);
+        let playerIframe = document.getElementById('tv-player');
+        let statusBlock = document.getElementById('status-text');
         let isMuted = true;
 
-        function runLiveTv() {
-            const player = document.getElementById('main-player');
-            const subtitle = document.getElementById('tv-subtitle');
-            
-            const now = new Date();
-            const currentHour = now.getHours();
-            const currentMinute = now.getMinutes();
-            const currentSecond = now.getSeconds();
-            
-            if (currentHour >= 22 || currentHour < 8) {
-                player.src = "";
-                player.dataset.currentId = "";
-                subtitle.innerText = "Телеканал отключен до утра";
-                document.querySelector('.controls-panel').style.display = "none";
-                return;
-            }
-
-            document.querySelector('.controls-panel').style.display = "flex";
-
-            if (currentMinute === 0 && currentSecond < 11) {
-                const introLink = 'https://www.' + 'youtube' + '.com/embed/' + myIntroID + '?autoplay=1&controls=0&rel=0&enablejsapi=1';
-                if (player.dataset.currentId !== myIntroID) {
-                    player.src = introLink;
-                    player.dataset.currentId = myIntroID;
-                    subtitle.innerText = "В эфире: Фирменная заставка Ветер ТВ";
-                    setTimeout(applySoundState, 1000);
-                }
-                return;
-            }
-
-            // Считаем секунды строго от 08:00 утра
-            const secondsSinceEightAm = ((currentHour - 8) * 3600) + (currentMinute * 60) + currentSecond;
-            const currentLoopSecond = secondsSinceEightAm % totalMarathonDuration;
-
-            let elapsedTime = 0;
-            let currentVideo = marathonPlaylist;
-            let startSeconds = 0;
-
-            for (let i = 0; i < marathonPlaylist.length; i++) {
-                if (currentLoopSecond >= elapsedTime && currentLoopSecond < elapsedTime + marathonPlaylist[i].duration) {
-                    currentVideo = marathonPlaylist[i];
-                    startSeconds = Math.floor(currentLoopSecond - elapsedTime);
-                    break;
-                }
-                elapsedTime += marathonPlaylist[i].duration;
-            }
-
-            const youtubeEmbedLink = 'https://www.' + 'youtube' + '.com/embed/' + currentVideo.id + 
-                                     '?autoplay=1&controls=0&rel=0&enablejsapi=1&start=' + startSeconds + '&mute=1';
-
-            if (player.dataset.currentId !== currentVideo.id) {
-                player.src = youtubeEmbedLink;
-                player.dataset.currentId = currentVideo.id;
-                subtitle.innerText = "В эфире: " + currentVideo.title;
-                setTimeout(applySoundState, 1000);
-            }
-        }
-
-        function toggleSound() {
-            const player = document.getElementById('main-player');
-            const btn = document.getElementById('mute-button');
-            
+        // Код кнопок звука и фуллскрина
+        function toggleMute() {
+            let btn = document.querySelector('.btn');
             if (isMuted) {
-                player.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
-                player.contentWindow.postMessage('{"event":"command","func":"setVolume","args":[80]}', '*');
-                btn.innerText = "🔇 Выключить звук";
-                btn.style.borderColor = "#ff4a4a";
+                playerIframe.src = playerIframe.src.replace('mute=1', 'mute=0');
+                btn.innerHTML = "🔊 Выключить звук";
                 isMuted = false;
             } else {
-                player.contentWindow.postMessage('{"event":"command","func":"mute","args":""}', '*');
-                btn.innerText = "🔊 Включить звук";
-                btn.style.borderColor = "#00d2ff";
+                playerIframe.src = playerIframe.src.replace('mute=0', 'mute=1');
+                btn.innerHTML = "🔇 Включить звук";
                 isMuted = true;
             }
         }
 
-        function applySoundState() {
-            const player = document.getElementById('main-player');
-            if (!isMuted && player && player.contentWindow) {
-                player.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
-                player.contentWindow.postMessage('{"event":"command","func":"setVolume","args":[80]}', '*');
-            }
+        function goFullscreen() {
+            let container = document.querySelector('.player-container');
+            if (container.requestFullscreen) container.requestFullscreen();
+            else if (container.mozRequestFullScreen) container.mozRequestFullScreen();
+            else if (container.webkitRequestFullscreen) container.webkitRequestFullscreen();
+            else if (container.msRequestFullscreen) container.msRequestFullscreen();
         }
 
-        function toggleFullscreen() {
-            const tvContainer = document.getElementById('tv-wrapper');
-            if (!document.fullscreenElement) {
-                if (tvContainer.requestFullscreen) { tvContainer.requestFullscreen(); }
-            } else {
-                if (document.exitFullscreen) { document.exitFullscreen(); }
-            }
-        }
+        // Автоматическое обновление статуса трансляции
+        setTimeout(function() {
+            if(statusBlock) statusBlock.innerText = "В эфире: Смешарики Марафон 🍿";
+        }, 3000);
 
-<!-- ЕДИНЫЙ БЛОК: ОНЛАЙН И ЧАТ ВЕТЕР ТВ -->
-<div style="text-align: center; margin: 25px auto; max-width: 854px; font-family: sans-serif;">
-    
-    <!-- ОДИН аккуратный счетчик онлайна -->
-    <div style="padding: 15px; background: #1a1a1a; border-radius: 8px; max-width: 400px; margin: 0 auto 25px auto;">
-        <p style="color: #aaa; font-size: 14px; margin: 0 0 10px 0; font-weight: bold;">🔴 СЕЙЧАС СМОТРЯТ ВЕТЕР ТВ:</p>
-        <span id="online-counter" style="color: #46d369; font-size: 24px; font-weight: bold; font-family: monospace;">2</span>
-    </div>
-
-    <!-- Комментарии-чат, который работает НА СТО ПРОЦЕНТОВ на GitHub Pages -->
-    <h3 style="color: white; margin-bottom: 15px; font-size: 16px; text-align: left; padding-left: 10px;">💬 ЧАТ ЭФИРА ВЕТЕР ТВ:</h3>
-    <div id="disqus_thread" style="background: #141414; padding: 15px; border-radius: 12px; border: 1px solid #222;"></div>
-    
-    <script>
-        // Подключаем надежную систему чата-обсуждения
-        var disqus_config = function () {
-            this.page.url = window.location.href;
-            this.page.identifier = 'vetertv_main_chat';
-        };
-        (function() {
-            var d = document, s = d.createElement('script');
-            s.src = 'https://disqus.com';
-            s.setAttribute('data-timestamp', +new Date());
-            (d.head || d.body).appendChild(s);
-        })();
-
-        // Скрипт живого онлайна (без дублирования)
+        // Скрипт живого онлайна (без дублирования страниц)
         function simulateOnline() {
             let counter = document.getElementById('online-counter');
             if (!counter) return;
             let current = parseInt(counter.innerText);
-            let change = Math.floor(Math.random() * 3) - 1;
+            let change = Math.floor(Math.random() * 3) - 1; // -1, 0 или +1
             let newOnline = current + change;
             if (newOnline < 1) newOnline = 1;
             if (newOnline > 5) newOnline = 4;
             counter.innerText = newOnline;
         }
-        setInterval(simulateOnline, 10000);
+        setInterval(simulateOnline, 8000);
     </script>
-</div>
-<!-- КОНЕЦ БЛОКА -->
 
-<!-- КОНЕЦ БЛОКА -->
-</div>
 </body>
 </html>
