@@ -36,12 +36,21 @@
         @keyframes blink { 50% { opacity: 0.5; } }
         .subtitle { font-size: 1.2rem; color: #94a3b8; margin-bottom: 25px; font-weight: 500; }
         
+        /* Главная сетка: видео + чат */
+        .main-broadcast-layout {
+            display: flex;
+            max-width: 1200px;
+            margin: 0 auto;
+            gap: 20px;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
         .video-container {
             position: relative;
-            width: 850px;
-            max-width: 100%;
+            flex: 1;
+            max-width: 850px;
             height: 480px; 
-            margin: 0 auto;
             background: #000;
             border-radius: 12px;
             overflow: hidden;
@@ -51,16 +60,41 @@
         
         iframe { width: 100% !important; height: 480px !important; border: none; display: block; }
         
-        /* ЖЕСТКИЙ ХАК ДЛЯ ПОЛНОГО ЭКРАНА: УБИРАЕМ ЧЕРНЫЕ ПОЛЯ YOUTUBE */
+        /* Контейнер для готового чата справа */
+        .chat-container {
+            width: 340px;
+            height: 480px;
+            background: #1e293b;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+            border: 1px solid #334155;
+        }
+
+        /* На мобилках чат прыгает вниз */
+        @media (max-width: 1000px) {
+            .main-broadcast-layout {
+                flex-direction: column;
+                align-items: center;
+            }
+            .chat-container {
+                width: 100%;
+                max-width: 850px;
+                height: 400px;
+                margin-top: 10px;
+            }
+        }
+
+        /* Настройки полного экрана */
         .video-container:fullscreen iframe {
             width: 100vw !important;
-            height: 56.25vw !important; /* Пропорции 16:9 под ширину экрана */
+            height: 56.25vw !important;
             min-height: 100vh !important;
-            min-width: 177.77vh !important; /* Пропорции 16:9 под высоту экрана */
+            min-width: 177.77vh !important;
             position: absolute;
             top: 50%;
             left: 50%;
-            transform: translate(-50%, -50%); /* Центрируем видео */
+            transform: translate(-50%, -50%);
         }
         .video-container:fullscreen .video-mask {
             width: 100vw !important;
@@ -90,9 +124,19 @@
     <div class="live-badge">Прямой эфир</div>
     <div class="subtitle" id="currentTrack">Загрузка эфира...</div>
 
-    <div class="video-container">
-        <div class="video-mask"></div>
-        <iframe id="tv-player" allow="autoplay; fullscreen" allowfullscreen></iframe>
+    <div class="main-broadcast-layout">
+        
+        <!-- Плеер -->
+        <div class="video-container">
+            <div class="video-mask"></div>
+            <iframe id="tv-player" allow="autoplay; fullscreen" allowfullscreen></iframe>
+        </div>
+
+        <!-- Готовый чат без регистраций -->
+        <div class="chat-container">
+            <iframe src="https://minnit.chat" allow="geolocation; microphone; camera; fullscreen" style="border:none; width:100%; height:480px;"></iframe>
+        </div>
+
     </div>
 
     <div class="controls">
@@ -214,7 +258,3 @@
         });
 
         updateLiveBroadcast();
-        setInterval(updateLiveBroadcast, 5000);
-    </script>
-</body>
-</html>
