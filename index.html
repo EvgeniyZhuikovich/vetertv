@@ -47,9 +47,8 @@
             overflow: hidden;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
         }
-        /* Невидимый слой-маска поверх видео — блокирует паузу и перемотку ютуба */
-        .video-mask { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 30; background: transparent; }
         
+        /* УБРАЛИ МАСКУ, ЧТОБЫ ЗРИТЕЛЬ МОГ НАЖАТЬ НА ВИДЕО И ОНО ЗАПУСТИЛОСЬ */
         iframe { width: 100% !important; height: 480px !important; border: none; display: block; }
         
         .controls { margin-top: 20px; display: flex; justify-content: center; gap: 15px; }
@@ -73,12 +72,11 @@
     <div class="subtitle" id="currentTrack">Загрузка эфира...</div>
 
     <div class="video-container">
-        <div class="video-mask"></div>
-        <iframe id="tv-player" src="" allow="autoplay; fullscreen" allowfullscreen></iframe>
+        <!-- Обычный плеер без блокирующих параметров, прогрузится 100% -->
+        <iframe id="tv-player" src="" allow="autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe>
     </div>
 
     <div class="controls">
-        <button class="btn" id="muteBtn">🔇 Включить звук</button>
         <button class="btn" id="fullscreenBtn">📺 Полный экран</button>
     </div>
 
@@ -86,7 +84,6 @@
         • Онлайн: <span class="online-number" id="onlineCount">Загрузка...</span> чел.
     </div>
 
-    <!-- Firebase -->
     <script src="https://gstatic.com"></script>
     <script src="https://gstatic.com"></script>
 
@@ -122,7 +119,6 @@
             document.getElementById('onlineCount').textContent = "1";
         }
 
-        // ТВОИ РОДНЫЕ ССЫЛКИ
         const playlist = [
             { id: 'AlR0fQsm83Y', title: 'Смешарики. Начало', duration: 5400 },
             { id: 'xfFu4P2FZZc', title: 'Смешарики. Легенда о золотом драконе', duration: 4790 },
@@ -132,7 +128,6 @@
         
         const introId = 'UbY3QIM69Ho';
         const totalDuration = playlist.reduce((sum, item) => sum + item.duration, 0);
-        let isMuted = true; // Стартуем без звука, чтобы Chrome разрешил показ
 
         function updateLiveBroadcast() {
             const currentTimestamp = Math.floor(Date.now() / 1000);
@@ -141,11 +136,10 @@
             const seconds = now.getSeconds();
             
             const playerIframe = document.getElementById('tv-player');
-            const muteParam = isMuted ? 1 : 0;
 
             // Заставка на 11 секунд каждые полчаса
             if ((minutes === 0 || minutes === 30) && seconds < 11) {
-                const introUrl = `https://youtube.com{introId}?autoplay=1&mute=${muteParam}&controls=0&enablejsapi=1&origin=${window.location.origin}`;
+                const introUrl = `https://youtube.com{introId}?autoplay=1&modestbranding=1&rel=0`;
                 if (playerIframe.src !== introUrl) {
                     playerIframe.src = introUrl;
                     document.getElementById('currentTrack').textContent = '📺 Заставка телеканала Ветер ТВ';
@@ -153,7 +147,6 @@
                 return;
             }
 
-            // Фильм по расписанию
             let timeInCycle = currentTimestamp % totalDuration;
             let currentMovie = playlist[0];
             let startSeconds = 0;
@@ -167,8 +160,8 @@
                 timeInCycle -= playlist[i].duration;
             }
 
-            // ЖЕЛЕЗНЫЙ ФОРМАТ ССЫЛКИ ДЛЯ YOUTUBE С АВТОЗАПУСКОМ (origin обязателен для GitHub Pages)
-            const movieUrl = `https://youtube.com{currentMovie.id}?autoplay=1&mute=${muteParam}&controls=0&start=${startSeconds}&enablejsapi=1&origin=${window.location.origin}`;
+            // Чистая, стандартная ссылка, которую YouTube разрешает открывать везде
+            const movieUrl = `https://youtube.com{currentMovie.id}?autoplay=1&start=${startSeconds}&modestbranding=1&rel=0`;
             
             if (!playerIframe.src.includes(currentMovie.id)) {
                 playerIframe.src = movieUrl;
@@ -176,27 +169,11 @@
             }
         }
 
-        // Кнопка звука
-        document.getElementById('muteBtn').addEventListener('click', function() {
-            const playerIframe = document.getElementById('tv-player');
-            isMuted = !isMuted;
-            
-            if (isMuted) {
-                this.innerHTML = "🔇 Включить звук";
-                playerIframe.contentWindow.postMessage('{"event":"command","func":"mute","args":""}', '*');
-            } else {
-                this.innerHTML = "🔊 Выключить звук";
-                playerIframe.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
-            }
-        });
-
-        // Кнопка полного экрана
         document.getElementById('fullscreenBtn').addEventListener('click', function() {
             const container = document.querySelector('.video-container');
             if (container.requestFullscreen) container.requestFullscreen();
         });
 
-        // Запуск
         updateLiveBroadcast();
         setInterval(updateLiveBroadcast, 5000);
     </script>
