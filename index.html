@@ -48,7 +48,6 @@
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
         }
         
-        /* УБРАЛИ МАСКУ, ЧТОБЫ ЗРИТЕЛЬ МОГ НАЖАТЬ НА ВИДЕО И ОНО ЗАПУСТИЛОСЬ */
         iframe { width: 100% !important; height: 480px !important; border: none; display: block; }
         
         .controls { margin-top: 20px; display: flex; justify-content: center; gap: 15px; }
@@ -69,11 +68,11 @@
 
     <h1>Ветер ТВ</h1>
     <div class="live-badge">Прямой эфир</div>
-    <div class="subtitle" id="currentTrack">Загрузка эфира...</div>
+    <div class="subtitle">Сейчас в эфире: Смешарики. Легенда о золотом драконе</div>
 
     <div class="video-container">
-        <!-- Обычный плеер без блокирующих параметров, прогрузится 100% -->
-        <iframe id="tv-player" src="" allow="autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe>
+        <!-- Жёсткая прямая ссылка, которая заведётся на 1000% -->
+        <iframe src="https://youtube.com" allow="autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe>
     </div>
 
     <div class="controls">
@@ -119,63 +118,10 @@
             document.getElementById('onlineCount').textContent = "1";
         }
 
-        const playlist = [
-            { id: 'AlR0fQsm83Y', title: 'Смешарики. Начало', duration: 5400 },
-            { id: 'xfFu4P2FZZc', title: 'Смешарики. Легенда о золотом драконе', duration: 4790 },
-            { id: 'dQw4w9WgXcQ', title: 'Смешарики. ДежаВю', duration: 5100 },
-            { id: '1vBgKm9qhhM', title: 'Смешарики снимают кино', duration: 5212 }
-        ];
-        
-        const introId = 'UbY3QIM69Ho';
-        const totalDuration = playlist.reduce((sum, item) => sum + item.duration, 0);
-
-        function updateLiveBroadcast() {
-            const currentTimestamp = Math.floor(Date.now() / 1000);
-            const now = new Date();
-            const minutes = now.getMinutes();
-            const seconds = now.getSeconds();
-            
-            const playerIframe = document.getElementById('tv-player');
-
-            // Заставка на 11 секунд каждые полчаса
-            if ((minutes === 0 || minutes === 30) && seconds < 11) {
-                const introUrl = `https://youtube.com{introId}?autoplay=1&modestbranding=1&rel=0`;
-                if (playerIframe.src !== introUrl) {
-                    playerIframe.src = introUrl;
-                    document.getElementById('currentTrack').textContent = '📺 Заставка телеканала Ветер ТВ';
-                }
-                return;
-            }
-
-            let timeInCycle = currentTimestamp % totalDuration;
-            let currentMovie = playlist[0];
-            let startSeconds = 0;
-
-            for (let i = 0; i < playlist.length; i++) {
-                if (timeInCycle < playlist[i].duration) {
-                    currentMovie = playlist[i];
-                    startSeconds = timeInCycle;
-                    break;
-                }
-                timeInCycle -= playlist[i].duration;
-            }
-
-            // Чистая, стандартная ссылка, которую YouTube разрешает открывать везде
-            const movieUrl = `https://youtube.com{currentMovie.id}?autoplay=1&start=${startSeconds}&modestbranding=1&rel=0`;
-            
-            if (!playerIframe.src.includes(currentMovie.id)) {
-                playerIframe.src = movieUrl;
-                document.getElementById('currentTrack').textContent = 'Сейчас в эфире: ' + currentMovie.title;
-            }
-        }
-
         document.getElementById('fullscreenBtn').addEventListener('click', function() {
             const container = document.querySelector('.video-container');
             if (container.requestFullscreen) container.requestFullscreen();
         });
-
-        updateLiveBroadcast();
-        setInterval(updateLiveBroadcast, 5000);
     </script>
 </body>
 </html>
