@@ -51,6 +51,25 @@
         
         iframe { width: 100% !important; height: 480px !important; border: none; display: block; }
         
+        /* Фикс для полного экрана */
+        .video-container:fullscreen iframe,
+        .video-container:fullscreen .video-mask,
+        .video-container:-webkit-full-screen iframe,
+        .video-container:-webkit-full-screen .video-mask,
+        .video-container:-moz-full-screen iframe,
+        .video-container:-moz-full-screen .video-mask,
+        .video-container:-ms-fullscreen iframe,
+        .video-container:-ms-fullscreen .video-mask {
+            width: 100vw !important;
+            height: 56.25vw !important;
+            min-height: 100vh !important;
+            min-width: 177.77vh !important;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
         .controls { margin-top: 20px; display: flex; justify-content: center; gap: 15px; }
         .btn {
             background-color: #0284c7; color: white; border: none; padding: 12px 24px;
@@ -62,7 +81,7 @@
             margin-top: 35px; font-size: 1.3rem; color: #94a3b8; background: #1e293b;
             display: inline-block; padding: 8px 20px; border-radius: 20px; border: 1px solid #334155;
         }
-        .online-number { color: #22c55e; font-weight: bold; text-shadow: 0 0 10px rgba(34, 194, 94, 0.2); }
+        .online-number { color: #22c55e; font-weight: bold; text-shadow: 0 0 10px rgba(34, 197, 94, 0.2); }
     </style>
 </head>
 <body>
@@ -120,12 +139,9 @@
             document.getElementById('onlineCount').textContent = "1";
         }
 
-        // ЖЕСТКО ЗАМЕНИЛ НА РАБОЧИЙ ПЕРЕЗАЛИВ ДЕЖАВЮ
+        // ТВОЙ КРУТОЙ 7-ЧАСОВОЙ СБОРНИК ВСЕХ ПОЛНОМЕТРАЖЕК
         const playlist = [
-            { id: 'AlR0fQsm83Y', title: 'Смешарики. Начало', duration: 5400 },
-            { id: 'xfFu4P2FZZc', title: 'Смешарики. Легенда о золотом драконе', duration: 4790 },
-            { id: 'gBlyHAn9Xq4', title: 'Смешарики. ДежаВю', duration: 5100 }, 
-            { id: '1vBgKm9qhhM', title: 'Смешарики снимают кино', duration: 5212 }
+            { id: 'l_U_2wz4brk', title: 'Смешарики. Марафон полнометражных фильмов', duration: 25770 } // ~7 часов 10 мин
         ];
         
         const introId = 'UbY3QIM69Ho';
@@ -156,17 +172,8 @@
             }
 
             let timeInCycle = currentTimestamp % totalDuration;
-            let currentMovie = playlist;
-            let startSeconds = 0;
-
-            for (let i = 0; i < playlist.length; i++) {
-                if (timeInCycle < playlist[i].duration) {
-                    currentMovie = playlist[i];
-                    startSeconds = timeInCycle;
-                    break;
-                }
-                timeInCycle -= playlist[i].duration;
-            }
+            let currentMovie = playlist[0];
+            let startSeconds = timeInCycle;
 
             const movieUrl = p1 + p2 + p3 + p4 + currentMovie.id + `?autoplay=1&start=${startSeconds}&mute=${muteParam}&controls=0&enablejsapi=1`;
             
@@ -192,6 +199,7 @@
         document.getElementById('fullscreenBtn').addEventListener('click', function() {
             const container = document.querySelector('.video-container');
             if (container.requestFullscreen) container.requestFullscreen();
+            else if (container.webkitRequestFullscreen) container.webkitRequestFullscreen();
         });
 
         updateLiveBroadcast();
