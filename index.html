@@ -93,7 +93,7 @@
             border: 1px solid #21262d;
             border-radius: 8px;
             max-width: 350px;
-            margin: 0 auto 25px auto;
+            margin: 0 auto;
         }
 
         .counter-title {
@@ -110,14 +110,6 @@
             font-weight: bold;
             font-family: monospace;
         }
-
-        .chat-title {
-            color: #ffffff;
-            margin-bottom: 12px;
-            font-size: 15px;
-            text-align: left;
-            padding-left: 5px;
-        }
     </style>
 </head>
 <body>
@@ -125,7 +117,7 @@
     <h1>ВЕТЕР ТВ</h1>
     <div class="sub-title" id="status-text">Запуск трансляции...</div>
 
-    <!-- КОНТЕЙНЕР ПЛЕЕРА -->
+    <!-- ПЛЕЕР -->
     <div class="player-container">
         <iframe id="tv-player" src="" allow="autoplay; encrypted-media" allowfullscreen></iframe>
     </div>
@@ -136,21 +128,17 @@
         <button class="btn" onclick="goFullscreen()">📺 Во весь экран</button>
     </div>
 
-    <!-- ЧАТ И СЧЕТЧИК -->
+    <!-- СЧЕТЧИК ОНЛАЙНА -->
     <div class="footer-block">
         <div class="counter-box">
             <p class="counter-title">🔴 СЕЙЧАС СМОТРЯТ ВЕТЕР ТВ:</p>
             <span id="online-counter">1</span>
         </div>
-
-        <div class="chat-title">💬 ЧАТ ЭФИРА ВЕТЕР ТВ:</div>
-        <iframe src="https://tlk.io" width="100%" height="350" style="border: 1px solid #21262d; border-radius: 12px; background: #0d1117;" frameborder="0"></iframe>
     </div>
 
     <script>
-        const myIntroID = 'UbY3QIM69Ho'; // Твоя заставка (11 секунд)
+        const myIntroID = 'UbY3QIM69Ho'; // Твоя заставка
         
-        // Твой оригинальный список фильмов
         const marathonPlaylist = [
             { id: 'bAqLx_E9bYw', duration: 5234, title: 'Смешарики. Начало' },
             { id: '2S50xKldJn0', duration: 4920, title: 'Смешарики. Легенда о золотом драконе' },
@@ -167,10 +155,10 @@
             if (statusBlock) statusBlock.innerText = "В эфире: Фирменная заставка Ветер ТВ";
             playerIframe.src = "https://youtube.com" + myIntroID + "?autoplay=1&mute=" + (isMuted ? 1 : 0);
             
-            // Ровно через 11 секунд включаем первый мультик
+            // Ровно 10 секунд заставки
             setTimeout(function() {
                 playMovie(0);
-            }, 11000);
+            }, 10000);
         }
 
         function playMovie(index) {
@@ -179,7 +167,6 @@
             let movie = marathonPlaylist[index];
             
             if (statusBlock) statusBlock.innerText = "В эфире: " + movie.title + " 🍿";
-            // ТУТ ИСПРАВЛЕНО: добавлена правильная ссылка с косой чертой перед ID фильма
             playerIframe.src = "https://youtube.com" + movie.id + "?autoplay=1&mute=" + (isMuted ? 1 : 0);
             
             setTimeout(function() {
