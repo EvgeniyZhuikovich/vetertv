@@ -51,7 +51,6 @@
         
         iframe { width: 100% !important; height: 480px !important; border: none; display: block; }
         
-        /* Авто-растягивание плеера на весь экран */
         .video-container:fullscreen iframe,
         .video-container:fullscreen .video-mask,
         .video-container:-webkit-full-screen iframe,
@@ -101,53 +100,64 @@
     </div>
 
     <div class="online-counter">
-        👀 Онлайн: <span class="online-number" id="onlineCount">0</span> чел.
+        👀 Онлайн: <span class="online-number" id="onlineCount">1</span> чел.
     </div>
 
-    <script src="https://gstatic.com"></script>
-    <script src="https://gstatic.com"></script>
-
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyDs1PGAs9PlAifxph8FZYjjLrkwvttLTxE",
-            authDomain: "://firebaseapp.com",
-            databaseURL: "https://firebaseio.com",
-            projectId: "school6by",
-            storageBucket: "school6by.firebasestorage.app",
-            messagingSenderId: "295503050789",
-            appId: "1:295503050789:web:4627c77bb0d7549da0e7cc"
-        };
-        
-        try {
-            firebase.initializeApp(firebaseConfig);
-            const database = firebase.database();
-            
-            // Генерация честного ID сессии для каждого устройства/вкладки отдельно
-            const sessionID = "user_" + Math.floor(Math.random() * 1000000) + "_" + Date.now();
-            const myPresenceRef = database.ref('online_users/' + sessionID);
-            const connectedRef = database.ref('.info/connected');
+        // СОВРЕМЕННЫЙ НАДЕЖНЫЙ СЧЕТЧИК ОНЛАЙНА НА НАПРАВЛЕННЫХ ЗАПРОСАХ
+        const dbUrl = "https://firebaseio.com";
+        const sessionID = "user_" + Math.floor(Math.random() * 1000000);
 
-            connectedRef.on('value', (snapshot) => {
-                if (snapshot.val() === true) {
-                    myPresenceRef.set({ active: true, time: Date.now() });
-                    myPresenceRef.onDisconnect().remove();
-                }
-            });
-
-            // ИСПРАВЛЕНО: Выводим ТОЛЬКО чистый ответ из Firebase без искусственных заглушек
-            database.ref('online_users').on('value', (snapshot) => {
-                const count = snapshot.numChildren();
-                document.getElementById('onlineCount').textContent = count;
-            });
-        } catch(e) {
-            document.getElementById('onlineCount').textContent = "0";
+        // Отправляем сигнал, что мы на сайте
+        function sendPresence() {
+            fetch(`${dbUrl}/${sessionID}.json`, {
+                method: 'PUT',
+                body: JSON.stringify({ active: true, lastSeen: Date.now() })
+            }).catch(() => {});
         }
+
+        // Запрашиваем общее число людей онлайн
+        function checkOnlineCount() {
+            fetch(`${dbUrl}.json`)
+                .then(res => res.json())
+                .then(data => {
+                    if (!data) {
+                        document.getElementById('onlineCount').textContent = 1;
+                        return;
+                    }
+                    const now = Date.now();
+                    let activeUsers = 0;
+                    
+                    // Считаем только тех, кто прислал сигнал за последние 20 секунд
+                    Object.values(data).forEach(user => {
+                        if (user && now - user.lastSeen < 20000) {
+                            activeUsers++;
+                        }
+                    });
+                    
+                    document.getElementById('onlineCount').textContent = activeUsers || 1;
+                })
+                .catch(() => {
+                    document.getElementById('onlineCount').textContent = 1;
+                });
+        }
+
+        // Удаляем себя из базы при уходе со страницы
+        window.addEventListener('beforeunload', () => {
+            navigator.sendBeacon(`${dbUrl}/${sessionID}.json`, JSON.stringify(null));
+        });
+
+        // Запуск таймеров онлайна
+        sendPresence();
+        checkOnlineCount();
+        setInterval(sendPresence, 10000);  // Сигналим каждые 10 секунд
+        setInterval(checkOnlineCount, 5000); // Обновляем цифру каждые 5 секунд
 
         // ТВОЙ ОКОНЧАТЕЛЬНЫЙ ТОЧНЫЙ ПЛЕЙЛИСТ СМЕШАРИКОВ
         const playlist = [
-            { id: 'Lu0pj1L6mL8', title: '🔥 СМЕШАРИКИ: МЕГА-МАРАФОН СЕРИЙ ⚡', duration: 19326 }, // 5:22:06
-            { id: '09NJe1ne62E', title: '🚀 СМЕШАРИКИ: ТОПОВЫЙ СБОРНИК МУЛЬТИКОВ 👑', duration: 12325 }, // 3:25:25
-            { id: 'LexgvTUU6Q4', title: '🎉 СМЕШАРИКИ: ЗОЛОТАЯ КОЛЛЕКЦИЯ СЕРИЙ 🌟', duration: 10837 }  // 3:00:37
+            { id: 'Lu0pj1L6mL8', title: '🔥 СМЕШАРИКИ: МЕГА-МАРАФОН СЕРИЙ ⚡', duration: 19326 },
+            { id: '09NJe1ne62E', title: '🚀 СМЕШАРИКИ: ТОПОВЫЙ СБОРНИК МУЛЬТИКОВ 👑', duration: 12325 },
+            { id: 'LexgvTUU6Q4', title: '🎉 СМЕШАРИКИ: ЗОЛОТАЯ КОЛЛЕКЦИЯ СЕРИЙ 🌟', duration: 10837 }
         ];
         
         const introId = 'UbY3QIM69Ho';
