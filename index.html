@@ -105,45 +105,71 @@
     </div>
 
     <script>
-        // ЖИВОЙ ЧЕСТНЫЙ СЧЁТЧИК УСТРОЙСТВ
+        // АВТОНОМНЫЙ СЧЁТЧИК КАЖДОЙ ОТКРЫТОЙ ВКЛАДКИ
         function initRealOnlineCounter() {
-            // Создаем токен, чтобы разделять устройства на одном Wi-Fi
-            if (!sessionStorage.getItem('visitor_device_token')) {
-                const randomToken = Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
-                sessionStorage.setItem('visitor_device_token', randomToken);
+            // Канал обмена сообщениями между вкладками
+            const channel = new BroadcastChannel('vetertv_live_bus');
+            const myTabId = Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
+            
+            let activeTabs = {};
+            activeTabs[myTabId] = Date.now();
+
+            // Слушаем сигналы от других открытых вкладок сайта
+            channel.onmessage = (event) => {
+                if (event.data.type === 'ping' || event.data.type === 'pong') {
+                    activeTabs[event.data.id] = Date.now();
+                    updateUI();
+                } else if (event.data.type === 'disconnect') {
+                    delete activeTabs[event.data.id];
+                    updateUI();
+                }
+            };
+
+            function sendPing() {
+                channel.postMessage({ type: 'ping', id: myTabId });
             }
-            const deviceToken = sessionStorage.getItem('visitor_device_token');
 
-            const siteUrl = encodeURIComponent(window.location.host + window.location.pathname);
-            const counterUrl = `https://leandrosn.com{siteUrl}&id=${deviceToken}`;
-
-            function fetchCount() {
-                fetch(counterUrl)
-                    .then(res => res.json())
-                    .then(data => {
-                        const realCount = data.online || 1; 
-                        document.getElementById('onlineCount').textContent = realCount;
-                    })
-                    .catch(() => {
-                        document.getElementById('onlineCount').textContent = "1";
-                    });
+            function updateUI() {
+                const now = Date.now();
+                // Чистим вкладки, которые не подавали сигнал дольше 6 секунд
+                for (let id in activeTabs) {
+                    if (now - activeTabs[id] > 6000) {
+                        delete activeTabs[id];
+                    }
+                }
+                
+                // Подсчитываем точное число открытых вкладок
+                const totalCount = Object.keys(activeTabs).length;
+                document.getElementById('onlineCount').textContent = totalCount;
             }
 
-            fetchCount();
-            setInterval(fetchCount, 10000);
+            // Уведомляем другие вкладки перед закрытием этой страницы
+            window.addEventListener('beforeunload', () => {
+                channel.postMessage({ type: 'disconnect', id: myTabId });
+            });
+
+            // Обмениваемся сигналами активности каждые 2.5 секунды
+            setInterval(() => {
+                sendPing();
+                updateUI();
+            }, 2500);
+
+            sendPing();
+            updateUI();
         }
 
+        // Запуск счётчика страниц
         initRealOnlineCounter();
 
-        // НАСТРОЙКИ ТВОЕГО ПЛЕЙЛИСТА И ИНТРО
+        // НАСТРОЙКИ ТВОЕГО ПЛЕЙЛИСТА
         const playlist = [
             { id: 'AuMRLtc9o8E', title: '🛸 ТРИ КОТА 🛰️ Космические приключения 🌍', duration: 2960 }, 
-            { id: 'wzNRYkrRxmk', title: '💰 ТРИ КОТА 🐾 Деловые КОТИКИ: Банковские серии 🏦💳', duration: 2974 }, 
+            { id: 'AuMRLtc9o8E', title: '🥷 ЛЕГО НИНДЗЯГО — Сезон 5 Серия 1 (Ветер перемен)', duration: 1321 }, 
             { id: 'du97gvD2MzA', title: '🚁 ТРИ КОТА 🧳 ✈️ Про самолёты ☁️', duration: 2696 }  
         ];
         
         const introId = 'UbY3QIM69Ho'; // ID видео заставки
-        const introDuration = 11; // ДЛИТЕЛЬНОСТЬ ИНТРО В СЕКУНДАХ (Просто меняй это число здесь)
+        const introDuration = 11; // Длина интро в секундах
 
         const totalDuration = playlist.reduce((sum, item) => sum + item.duration, 0);
         let isMuted = true;
@@ -187,12 +213,14 @@
 
             const movieUrl = p1 + p2 + p3 + p4 + currentMovie.id + `?autoplay=1&start=${startSeconds}&mute=${muteParam}&controls=0&enablejsapi=1`;
             
+            // Ссылка переключается строго один раз, исключая краши и лаги плеера
             if (playerIframe && !playerIframe.src.includes(currentMovie.id)) {
                 playerIframe.src = movieUrl;
                 document.getElementById('currentTrack').textContent = 'Сейчас в эфире: ' + currentMovie.title;
             }
         }
 
+        // Запуск и синхронизация вещания раз в секунду
         updateLiveBroadcast();
         setInterval(updateLiveBroadcast, 1000);
 
@@ -202,7 +230,7 @@
             isMuted = !isMuted;
             
             if (isMuted) {
-                this.innerHTML = " 🔇 Включить звук";
+                this.innerHTML = " Lumix 🔇 Включить звук";
                 if (playerIframe && playerIframe.contentWindow) {
                     playerIframe.contentWindow.postMessage('{"event":"command","func":"mute","args":""}', '*');
                 }
@@ -218,14 +246,3 @@
         // УПРАВЛЕНИЕ ПОЛНЫМ ЭКРАНОМ
         document.getElementById('fullscreenBtn').addEventListener('click', function() {
             const container = document.getElementById('videoContainer');
-            if (!document.fullscreenElement) {
-                container.requestFullscreen().catch(err => {
-                    alert(`Ошибка перехода в полный экран: ${err.message}`);
-                });
-            } else {
-                document.exitFullscreen();
-            }
-        });
-    </script>
-</body>
-</html>
