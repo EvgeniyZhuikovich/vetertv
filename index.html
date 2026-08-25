@@ -77,7 +77,7 @@
     </div>
 
     <div class="controls">
-        <button class="btn" id="muteBtn"> Lumix 🔇 Включить звук</button>
+        <button class="btn" id="muteBtn">🔇 Включить звук</button>
         <button class="btn" id="fullscreenBtn">📺 Полный экран</button>
     </div>
 
@@ -86,7 +86,7 @@
     </div>
 
     <script>
-        // БЕЗОТКАЗНЫЙ ОБЛАЧНЫЙ СЧЁТЧИК УСТРОЙСТВ
+        // ОБЛАЧНЫЙ ЖИВОЙ СЧЁТЧИК УСТРОЙСТВ
         function initRealOnlineCounter() {
             // Генерируем уникальный маркер для этой вкладки
             if (!sessionStorage.getItem('vetertv_device_unique_token')) {
@@ -95,14 +95,13 @@
             }
             const token = sessionStorage.getItem('vetertv_device_unique_token');
 
-            // Используем стабильный открытый сервис, который не сбрасывает данные при обновлении страниц
+            // Ссылка на стабильный внешний счётчик, разделяющий ПК и телефон
             const counterUrl = `https://leandrosn.com{token}`;
 
             function fetchCount() {
                 fetch(counterUrl)
                     .then(res => res.json())
                     .then(data => {
-                        // Выводим честное число открытых вкладок со всей планеты
                         const currentViewers = data.online || 1;
                         document.getElementById('onlineCount').textContent = currentViewers;
                     })
@@ -111,9 +110,9 @@
                     });
             }
 
-            // Опрашиваем сервер сразу и затем каждые 5 секунд, чтобы онлайн обновлялся шустро
+            // Опрашиваем сервер сразу и затем каждые 6 секунд
             fetchCount();
-            setInterval(fetchCount, 5000);
+            setInterval(fetchCount, 6000);
         }
 
         initRealOnlineCounter();
@@ -126,11 +125,11 @@
         ];
         const totalDuration = playlist.reduce((sum, item) => sum + item.duration, 0);
 
-        const introId = 'UbY3QIM69Ho'; // ID твоей заставки
-        const introDuration = 11; // Длина интро в секундах
+        const introId = 'UbY3QIM69Ho'; // ID твоей фирменной заставки
+        const introDuration = 11; // Длина заставки в секундах
 
         let isMuted = true;
-        let lastLoadedVideoId = ""; // Фиксатор ID, полностью убирающий перезагрузки плеера каждую секунду
+        let lastLoadedVideoId = ""; // Закрепитель ID, полностью убирающий перезагрузки плеера
 
         const p1 = "https://www.";
         const p2 = "youtube";
@@ -157,7 +156,7 @@
                 return;
             }
 
-            // 2. БЕСКОНЕЧНЫЙ ЦИКЛ ПЛЕЙЛИСТА КОТОВ ПО ОЧЕРЕДИ
+            // 2. БЕСКОНЕЧНЫЙ ЦИКЛ ПЛЕЙЛИСТА КОТОВ
             let timeInCycle = currentTimestamp % totalDuration;
             let currentMovie = null;
 
@@ -173,7 +172,7 @@
                 timeInCycle -= playlist[i].duration;
             }
 
-            // 3. БЕЗОПАСНАЯ ОТПРАВКА ССЫЛКИ В ПЛЕЕР (СТРОГО ОДИН РАЗ, БЕЗ МОРГАНИЙ)
+            // 3. ОТПРАВКА ССЫЛКИ В ПЛЕЕР (СТРОГО ОДИН РАЗ)
             if (currentMovie && playerIframe) {
                 if (lastLoadedVideoId !== currentMovie.id) {
                     lastLoadedVideoId = currentMovie.id;
@@ -193,7 +192,7 @@
             isMuted = !isMuted;
             
             if (isMuted) {
-                this.innerHTML = " Lumix 🔇 Включить звук";
+                this.innerHTML = "🔇 Включить звук";
                 if (playerIframe && playerIframe.contentWindow) {
                     playerIframe.contentWindow.postMessage('{"event":"command","func":"mute","args":""}', '*');
                 }
