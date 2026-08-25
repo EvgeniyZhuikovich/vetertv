@@ -51,25 +51,6 @@
         
         iframe { width: 100% !important; height: 480px !important; border: none; display: block; }
         
-        /* Авто-растягивание плеера на весь экран */
-        .video-container:fullscreen iframe,
-        .video-container:fullscreen .video-mask,
-        .video-container:-webkit-full-screen iframe,
-        .video-container:-webkit-full-screen .video-mask,
-        .video-container:-moz-full-screen iframe,
-        .video-container:-moz-full-screen .video-mask,
-        .video-container:-ms-fullscreen iframe,
-        .video-container:-ms-fullscreen .video-mask {
-            width: 100vw !important;
-            height: 56.25vw !important;
-            min-height: 100vh !important;
-            min-width: 177.77vh !important;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-
         .controls { margin-top: 20px; display: flex; justify-content: center; gap: 15px; }
         .btn {
             background-color: #0284c7; color: white; border: none; padding: 12px 24px;
@@ -105,9 +86,9 @@
     </div>
 
     <script>
-        // АВТОНОМНЫЙ СЧЁТЧИК КАЖДОЙ ОТКРЫТОЙ ВКЛАДКИ
+        // АВТОНОМНЫЙ ЛОКАЛЬНЫЙ СЧЁТЧИК СТРАНИЦ
         function initRealOnlineCounter() {
-            const channel = new BroadcastChannel('vetertv_live_bus');
+            const channel = new BroadcastChannel('vetertv_live_bus_main');
             const myTabId = Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
             
             let activeTabs = {};
@@ -153,54 +134,72 @@
 
         initRealOnlineCounter();
 
-        // НАСТРОЙКИ ПЛЕЕРА
+        // НАСТРОЙКИ ОСНОВНОГО ПЛЕЙЛИСТА КОТОВ
+        const playlist = [
+            { id: 'AuMRLtc9o8E', title: '🛸 ТРИ КОТА 🛰️ Космические приключения 🌍', duration: 2960 }, 
+            { id: 'wzNRYkrRxmk', title: '💰 ТРИ КОТА 🐾 Деловые КОТИКИ: Банковские серии 🏦💳', duration: 2974 }, 
+            { id: 'du97gvD2MzA', title: '🚁 ТРИ КОТА 🧳 ✈️ Про самолёты ☁️', duration: 2696 }  
+        ];
+        const totalDuration = playlist.reduce((sum, item) => sum + item.duration, 0);
+
+        const introId = 'UbY3QIM69Ho'; // ID твоей заставки
+        const introDuration = 11; // Длина интро в секундах
+
         let isMuted = true;
+        let lastLoadedVideoId = ""; // Фиксатор ID, убирающий секундные перезагрузки плеера
+
         const p1 = "https://www.";
         const p2 = "youtube";
         const p3 = ".com/";
         const p4 = "embed/";
 
         function updateLiveBroadcast() {
+            const currentTimestamp = Math.floor(Date.now() / 1000);
             const now = new Date();
-            const hours = now.getHours();
             const minutes = now.getMinutes();
             const seconds = now.getSeconds();
             
             const playerIframe = document.getElementById('tv-player');
             const muteParam = isMuted ? 1 : 0;
 
-            let currentMovie = null;
-
-            // ЖЕСТКОЕ РАСПИСАНИЕ ПО ЧАСАМ ТВОЕГО КОМПЬЮТЕРА
-            // С 19:00 до 19:22 запускается Ниндзяго. (Когда найдешь оригинальный ID серии, вставь вместо 'AuMRLtc9o8E')
-            if (hours === 19 && minutes >= 0 && minutes < 22) {
-                currentMovie = { 
-                    id: 'AuMRLtc9o8E', 
-                    title: '🥷 ЛЕГО НИНДЗЯГО — Сезон 5 Серия 1 (Ветер перемен)',
-                    startFrom: minutes * 60 + seconds
-                };
-            } 
-            // В любое другое время — крутятся Три Кота
-            else {
-                currentMovie = { 
-                    id: 'du97gvD2MzA', 
-                    title: '🚁 ТРИ КОТА 🧳 ✈️ Про самолёты ☁️',
-                    startFrom: (minutes % 45) * 60 + seconds
-                };
+            // 1. ЗАСТАВКА (Каждые 30 минут)
+            if ((minutes === 0 || minutes === 30) && seconds < introDuration) {
+                const introUrl = p1 + p2 + p3 + p4 + introId + `?autoplay=1&mute=${muteParam}&controls=0&enablejsapi=1`;
+                if (playerIframe && lastLoadedVideoId !== introId) {
+                    lastLoadedVideoId = introId;
+                    playerIframe.src = introUrl;
+                    document.getElementById('currentTrack').textContent = '📺 Заставка телеканала Ветер ТВ';
+                }
+                return;
             }
 
+            // 2. БЕСКОНЕЧНЫЙ ЦИКЛ ПЛЕЙЛИСТА КОТОВ ПО ОЧЕРЕДИ
+            let timeInCycle = currentTimestamp % totalDuration;
+            let currentMovie = null;
+
+            for (let i = 0; i < playlist.length; i++) {
+                if (timeInCycle < playlist[i].duration) {
+                    currentMovie = {
+                        id: playlist[i].id,
+                        title: playlist[i].title,
+                        startFrom: Math.floor(timeInCycle)
+                    };
+                    break;
+                }
+                timeInCycle -= playlist[i].duration;
+            }
+
+            // 3. БЕЗОПАСНАЯ ОТПРАВКА ССЫЛКИ В ПЛЕЕР (СТРОГО ОДИН РАЗ)
             if (currentMovie && playerIframe) {
-                const movieUrl = p1 + p2 + p3 + p4 + currentMovie.id + `?autoplay=1&start=${currentMovie.startFrom}&mute=${muteParam}&controls=0&enablejsapi=1`;
-                
-                // Исправлено: Сверяем полную ссылку целиком, чтобы плеер никогда не зависал в бесконечной загрузке
-                if (playerIframe.src !== movieUrl) {
-                    playerIframe.src = movieUrl;
+                if (lastLoadedVideoId !== currentMovie.id) {
+                    lastLoadedVideoId = currentMovie.id;
+                    playerIframe.src = p1 + p2 + p3 + p4 + currentMovie.id + `?autoplay=1&start=${currentMovie.startFrom}&mute=${muteParam}&controls=0&enablejsapi=1`;
                     document.getElementById('currentTrack').textContent = 'Сейчас в эфире: ' + currentMovie.title;
                 }
             }
         }
 
-        // Запуск и синхронизация каждую секунду
+        // Запуск вещания и синхронизация раз в секунду
         updateLiveBroadcast();
         setInterval(updateLiveBroadcast, 1000);
 
@@ -220,7 +219,6 @@
                     playerIframe.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
                 }
             }
-            updateLiveBroadcast();
         });
 
         // УПРАВЛЕНИЕ ПОЛНЫМ ЭКРАНОМ
