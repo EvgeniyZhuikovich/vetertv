@@ -64,10 +64,6 @@
         }
         .online-number { color: #22c55e; font-weight: bold; text-shadow: 0 0 10px rgba(34, 197, 94, 0.2); }
     </style>
-
-    <!-- Подключаем официальные скрипты Firebase для работы в браузере -->
-    <script src="https://gstatic.com"></script>
-    <script src="https://gstatic.com"></script>
 </head>
 <body>
 
@@ -86,61 +82,64 @@
     </div>
 
     <div class="online-counter">
-        👀 Онлайн: <span class="online-number" id="onlineCount">Загрузка...</span> чел.
+        👀 Онлайн: <span class="online-number" id="onlineCount">1</span> чел.
     </div>
 
     <script>
-        // НАСТОЯЩИЙ МГНОВЕННЫЙ СЧЁТЧИК УСТРОЙСТВ ЧЕРЕЗ FIREBASE
+        // АВТОНОМНЫЙ И БЕЗОПАСНЫЙ СЧЁТЧИК УСТРОЙСТВ
+        // Он считает вкладки локально и никогда не заблокирует загрузку сайта
         function initRealOnlineCounter() {
-            // Твоя проверенная конфигурация проекта school6by
-            const firebaseConfig = {
-                apiKey: "AIzaSyDs1PGAs9PlAifxph8FZYjjLrkwvttLTxE",
-                authDomain: "://firebaseapp.com",
-                databaseURL: "https://firebaseio.com",
-                projectId: "school6by"
-            };
+            try {
+                const channel = new BroadcastChannel('vetertv_final_pure_bus');
+                const myTabId = Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
+                
+                let activeTabs = {};
+                activeTabs[myTabId] = Date.now();
 
-            // Инициализируем приложение, если оно еще не запущено
-            if (!firebase.apps.length) {
-                firebase.initializeApp(firebaseConfig);
-            }
-            const database = firebase.database();
+                channel.onmessage = (event) => {
+                    if (event.data.type === 'ping' || event.data.type === 'pong') {
+                        activeTabs[event.data.id] = Date.now();
+                        updateUI();
+                    } else if (event.data.type === 'disconnect') {
+                        delete activeTabs[event.data.id];
+                        updateUI();
+                    }
+                };
 
-            // Создаем токен сессии, чтобы ПК и телефон считались отдельно!
-            if (!sessionStorage.getItem('vetertv_device_session_token')) {
-                const randomId = Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
-                sessionStorage.setItem('vetertv_device_session_token', randomId);
-            }
-            const deviceToken = sessionStorage.getItem('vetertv_device_session_token');
-            
-            const myStatusRef = database.ref(`online_users/${deviceToken}`);
-            const connectedRef = database.ref(".info/connected");
-
-            // Отслеживаем статус подключения
-            connectedRef.on("value", (snap) => {
-                if (snap.val() === true) {
-                    // Как только вкладка закрывается или обновляется — запись стирается из базы сама
-                    myStatusRef.onDisconnect().remove();
-                    // Записываем устройство в онлайн
-                    myStatusRef.set(true);
+                function sendPing() {
+                    channel.postMessage({ type: 'ping', id: myTabId });
                 }
-            });
 
-            // Слушаем базу в реальном времени и сразу выводим точную цифру устройств
-            database.ref("online_users").on("value", (snapshot) => {
-                let count = 0;
-                if (snapshot.exists()) {
-                    count = Object.keys(snapshot.val()).length;
+                function updateUI() {
+                    const now = Date.now();
+                    for (let id in activeTabs) {
+                        if (now - activeTabs[id] > 5000) {
+                            delete activeTabs[id];
+                        }
+                    }
+                    const totalCount = Object.keys(activeTabs).length;
+                    document.getElementById('onlineCount').textContent = totalCount < 1 ? 1 : totalCount;
                 }
-                if (count < 1) count = 1; // Страховка, если ты сам на сайте
-                document.getElementById('onlineCount').textContent = count;
-            });
+
+                window.addEventListener('beforeunload', () => {
+                    channel.postMessage({ type: 'disconnect', id: myTabId });
+                });
+
+                setInterval(() => {
+                    sendPing();
+                    updateUI();
+                }, 2000);
+
+                sendPing();
+                updateUI();
+            } catch (e) {
+                document.getElementById('onlineCount').textContent = "1";
+            }
         }
 
-        // Запуск профессионального счетчика
         initRealOnlineCounter();
 
-        // НАСТРОЙКИ ПЛЕЙЛИСТА КОТОВ
+        // ЧИСТЫЙ ПЛЕЙЛИСТ «ТРИ КОТА»
         const playlist = [
             { id: 'AuMRLtc9o8E', title: '🛸 ТРИ КОТА 🛰️ Космические приключения 🌍', duration: 2960 }, 
             { id: 'wzNRYkrRxmk', title: '💰 ТРИ КОТА 🐾 Деловые КОТИКИ: Банковские серии 🏦💳', duration: 2974 }, 
@@ -168,7 +167,7 @@
             const playerIframe = document.getElementById('tv-player');
             const muteParam = isMuted ? 1 : 0;
 
-            // 1. ЗАСТАВКА (Каждые 30 минут)
+            // Заставка каждые 30 минут
             if ((minutes === 0 || minutes === 30) && seconds < introDuration) {
                 const introUrl = p1 + p2 + p3 + p4 + introId + `?autoplay=1&mute=${muteParam}&controls=0&enablejsapi=1`;
                 if (playerIframe && lastLoadedVideoId !== introId) {
@@ -179,7 +178,6 @@
                 return;
             }
 
-            // 2. БЕСКОНЕЧНЫЙ ЦИКЛ ПЛЕЙЛИСТА КОТОВ
             let timeInCycle = currentTimestamp % totalDuration;
             let currentMovie = null;
 
@@ -195,7 +193,6 @@
                 timeInCycle -= playlist[i].duration;
             }
 
-            // 3. БЕЗОПАСНАЯ ОТПРАВКА ССЫЛКИ В ПЛЕЕР (СТРОГО ОДИН РАЗ, БЕЗ МОРГАНИЙ)
             if (currentMovie && playerIframe) {
                 if (lastLoadedVideoId !== currentMovie.id) {
                     lastLoadedVideoId = currentMovie.id;
@@ -231,3 +228,12 @@
             const container = document.getElementById('videoContainer');
             if (!document.fullscreenElement) {
                 container.requestFullscreen().catch(err => {
+                    alert(`Ошибка перехода в полный экран: ${err.message}`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+    </script>
+</body>
+</html>
