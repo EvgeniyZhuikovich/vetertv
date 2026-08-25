@@ -121,16 +121,23 @@
         try {
             firebase.initializeApp(firebaseConfig);
             const database = firebase.database();
-            const onlineRef = database.ref('.info/connected');
-            const myPresenceRef = database.ref('online_users').push();
+            
+            // НОВАЯ ЖЕЛЕЗОБЕТОННАЯ ЛОГИКА ДЛЯ УЧЕТА ВСЕХ УСТРОЙСТВ И ВКЛАДОК
+            // Создаем случайный ID для каждой открытой вкладки или устройства отдельно
+            const sessionID = "user_" + Math.floor(Math.random() * 1000000) + "_" + Date.now();
+            const myPresenceRef = database.ref('online_users/' + sessionID);
+            const connectedRef = database.ref('.info/connected');
 
-            onlineRef.on('value', (snapshot) => {
+            connectedRef.on('value', (snapshot) => {
                 if (snapshot.val() === true) {
-                    myPresenceRef.set(true);
+                    // Сохраняем в базу информацию о конкретном подключении
+                    myPresenceRef.set({ active: true, time: Date.now() });
+                    // При закрытии вкладки или потере сети — удаляем именно этот ID
                     myPresenceRef.onDisconnect().remove();
                 }
             });
 
+            // Слушаем общее количество уникальных сессий в ветке online_users
             database.ref('online_users').on('value', (snapshot) => {
                 const count = snapshot.numChildren();
                 document.getElementById('onlineCount').textContent = count || 1;
@@ -139,7 +146,7 @@
             document.getElementById('onlineCount').textContent = "1";
         }
 
-        // ТЕПЕРЬ СТРОГО ПО ПОРЯДКУ: ОТ 1 ДО 130 СЕРИИ
+        // Хронологический плейлист марафона
         const playlist = [
             { id: 'CYpcMNTtCSY', title: 'Простоквашино 1-30',    duration: 11015 },
             { id: 'UpDkayeSxm8', title: 'Простоквашино 31-50',   duration: 7335 },
@@ -177,7 +184,7 @@
             }
 
             let timeInCycle = currentTimestamp % totalDuration;
-            let currentMovie = playlist[0];
+            let currentMovie = playlist;
             let startSeconds = 0;
 
             for (let i = 0; i < playlist.length; i++) {
