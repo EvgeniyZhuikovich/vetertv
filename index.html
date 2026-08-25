@@ -100,49 +100,52 @@
         <button class="btn" id="fullscreenBtn">📺 Полный экран</button>
     </div>
 
-    <!-- Блок честного онлайна -->
     <div class="online-counter">
         👀 Онлайн: <span class="online-number" id="onlineCount">Загрузка...</span> чел.
     </div>
 
     <script>
-        // АВТОМАТИЧЕСКИЙ ЖИВОЙ СЧЕТЧИК
+        // ЖИВОЙ ЧЕСТНЫЙ СЧЁТЧИК УСТРОЙСТВ
         function initRealOnlineCounter() {
-            // Сервис считает открытые вкладки для твоего сайта в реальном времени
-            const siteUrl = encodeURIComponent(window.location.href);
-            const counterUrl = `https://leandrosn.com{siteUrl}`;
+            // Создаем токен, чтобы разделять устройства на одном Wi-Fi
+            if (!sessionStorage.getItem('visitor_device_token')) {
+                const randomToken = Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+                sessionStorage.setItem('visitor_device_token', randomToken);
+            }
+            const deviceToken = sessionStorage.getItem('visitor_device_token');
+
+            const siteUrl = encodeURIComponent(window.location.host + window.location.pathname);
+            const counterUrl = `https://leandrosn.com{siteUrl}&id=${deviceToken}`;
 
             function fetchCount() {
                 fetch(counterUrl)
                     .then(res => res.json())
                     .then(data => {
-                        // Берем реальное количество людей из ответа сервера
                         const realCount = data.online || 1; 
                         document.getElementById('onlineCount').textContent = realCount;
                     })
                     .catch(() => {
-                        // Если сеть мигнула, оставляем 1 (ты сам на сайте)
                         document.getElementById('onlineCount').textContent = "1";
                     });
             }
 
-            // Проверяем онлайн сразу и обновляем каждые 10 секунд
             fetchCount();
             setInterval(fetchCount, 10000);
         }
 
-        // Запуск счетчика
         initRealOnlineCounter();
 
-        // ЧИСТЫЙ И ИСПРАВЛЕННЫЙ ПЛЕЙЛИСТ СМЕШАРИКОВ / ТРЕХ КОТОВ
+        // НАСТРОЙКИ ТВОЕГО ПЛЕЙЛИСТА И ИНТРО
         const playlist = [
             { id: 'AuMRLtc9o8E', title: '🛸 ТРИ КОТА 🛰️ Космические приключения 🌍', duration: 2960 }, 
             { id: 'wzNRYkrRxmk', title: '💰 ТРИ КОТА 🐾 Деловые КОТИКИ: Банковские серии 🏦💳', duration: 2974 }, 
             { id: 'du97gvD2MzA', title: '🚁 ТРИ КОТА 🧳 ✈️ Про самолёты ☁️', duration: 2696 }  
         ];
         
-        const introId = 'UbY3QIM69Ho';
-        const totalDuration = playlist.reduce((sum, item) => sum + item.duration, 11);
+        const introId = 'UbY3QIM69Ho'; // ID видео заставки
+        const introDuration = 11; // ДЛИТЕЛЬНОСТЬ ИНТРО В СЕКУНДАХ (Просто меняй это число здесь)
+
+        const totalDuration = playlist.reduce((sum, item) => sum + item.duration, 0);
         let isMuted = true;
 
         const p1 = "https://www.";
@@ -159,8 +162,8 @@
             const playerIframe = document.getElementById('tv-player');
             const muteParam = isMuted ? 1 : 0;
 
-            // Заставка каждые 30 минут
-            if ((minutes === 0 || minutes === 30) && seconds < 11) {
+            // Заставка каждые 30 минут на длину introDuration
+            if ((minutes === 0 || minutes === 30) && seconds < introDuration) {
                 const introUrl = p1 + p2 + p3 + p4 + introId + `?autoplay=1&mute=${muteParam}&controls=0&enablejsapi=1`;
                 if (playerIframe && playerIframe.src !== introUrl) {
                     playerIframe.src = introUrl;
@@ -170,7 +173,7 @@
             }
 
             let timeInCycle = currentTimestamp % totalDuration;
-            let currentMovie = playlist[0];
+            let currentMovie = playlist;
             let startSeconds = 0;
 
             for (let i = 0; i < playlist.length; i++) {
@@ -190,11 +193,10 @@
             }
         }
 
-        // Запуск и синхронизация вещания каждую секунду
         updateLiveBroadcast();
         setInterval(updateLiveBroadcast, 1000);
 
-        // Управление звуком
+        // УПРАВЛЕНИЕ ЗВУКОМ
         document.getElementById('muteBtn').addEventListener('click', function() {
             const playerIframe = document.getElementById('tv-player');
             isMuted = !isMuted;
@@ -213,7 +215,7 @@
             updateLiveBroadcast();
         });
 
-        // Управление полным экраном
+        // УПРАВЛЕНИЕ ПОЛНЫМ ЭКРАНОМ
         document.getElementById('fullscreenBtn').addEventListener('click', function() {
             const container = document.getElementById('videoContainer');
             if (!document.fullscreenElement) {
