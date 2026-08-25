@@ -83,6 +83,10 @@
         }
         .online-number { color: #22c55e; font-weight: bold; text-shadow: 0 0 10px rgba(34, 197, 94, 0.2); }
     </style>
+
+    <!-- Подключаем Firebase библиотеки (совместимая версия для браузера) -->
+    <script src="https://gstatic.com"></script>
+    <script src="https://gstatic.com"></script>
 </head>
 <body>
 
@@ -90,7 +94,7 @@
     <div class="live-badge">Прямой эфир</div>
     <div class="subtitle" id="currentTrack">Загрузка эфира...</div>
 
-    <div class="video-container">
+    <div class="video-container" id="videoContainer">
         <div class="video-mask"></div>
         <iframe id="tv-player" allow="autoplay; fullscreen" allowfullscreen></iframe>
     </div>
@@ -105,36 +109,57 @@
     </div>
 
     <script>
-        // БЕЗОТКАЗНЫЙ СЧЕТЧИК БЕЗ FIREBASE И БЛОКИРОВОК GOOGLE
-        // Создает уникальный ключ на основе твоего репозитория vetertv
-        const counterKey = "vetertv_live_counter_unique_key";
-        
-        function updateOnlineAPI() {
-            // Запрашиваем данные у стабильного публичного API подсчета посещений
-            fetch(`https://countapi.xyz{counterKey}`)
-                .then(res => res.json())
-                .then(data => {
-                    // Имитируем падение онлайна, если заходов мало, но даем честный шаг для новых устройств
-                    // Каждое новое устройство железно прибавит +1 к текущему числу
-                    let displayCount = data.value % 10; 
-                    if (displayCount === 0) displayCount = 2;
-                    document.getElementById('onlineCount').textContent = displayCount;
-                })
-                .catch(() => {
-                    // Если внешний сервер лег — плавающий рандом вокруг реальных тестов, чтобы не было нуля
-                    document.getElementById('onlineCount').textContent = Math.floor(Math.random() * (4 - 2 + 1)) + 2;
-                });
+        // Инициализация твоей реальной конфигурации Firebase
+        const firebaseConfig = {
+          apiKey: "AIzaSyDs1PGAs9PlAifxph8FZYjjLrkwvttLTxE",
+          authDomain: "://firebaseapp.com",
+          databaseURL: "https://firebaseio.com",
+          projectId: "school6by",
+          storageBucket: "school6by.firebasestorage.app",
+          messagingSenderId: "295503050789",
+          appId: "1:295503050789:web:4627c77bb0d7549da0e7cc",
+          measurementId: "G-MG16T70TJS"
+        };
+
+        // Запуск Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // Генерация случайного ID сессии для вкладки
+        const userId = Math.random().toString(36).substring(2, 9);
+
+        // Функция подсчета честного онлайна
+        function initLiveOnlineCounter() {
+            const myStatusRef = db.ref(`online_users/${userId}`);
+            const connectedRef = db.ref(".info/connected");
+
+            connectedRef.on("value", (snap) => {
+                if (snap.val() === true) {
+                    // При закрытии вкладки запись удалится сама
+                    myStatusRef.onDisconnect().remove();
+                    // При входе добавляем пользователя
+                    myStatusRef.set(true);
+                }
+            });
+
+            // Слушаем общее число людей
+            db.ref("online_users").on("value", (snapshot) => {
+                let count = 0;
+                if (snapshot.exists()) {
+                    count = Object.keys(snapshot.val()).length;
+                }
+                document.getElementById('onlineCount').textContent = count;
+            });
         }
 
-        // Первичный запуск и обновление каждые 7 секунд
-        updateOnlineAPI();
-        setInterval(updateOnlineAPI, 7000);
+        // Запускаем счетчик
+        initLiveOnlineCounter();
 
-        // ТВОЙ ОКОНЧАТЕЛЬНЫЙ ТОЧНЫЙ ПЛЕЙЛИСТ СМЕШАРИКОВ
+        // ИСПРАВЛЕННЫЙ ПЛЕЙЛИСТ СМЕШАРИКОВ / ТРЕХ КОТОВ (убрана синтаксическая ошибка)
         const playlist = [
-            { id: 'AuMRLtc9o8E', title: '🛸 ТРИ КОТА 🛰️ Космические приключения 🌍 ', duration: 2960 }, 
-            { id: 'wzNRYkrRxmk: 💰 ТРИ КОТА 🐾 Деловые КОТИКИ: Банковские серии 🏦💳', duration: 2974 }, 
-            { id: 'du97gvD2MzA', title: '🚁ТРИ КОТА 🧳 ✈️ Про самолёты ☁️ ', duration:  2696 }  
+            { id: 'AuMRLtc9o8E', title: '🛸 ТРИ КОТА 🛰️ Космические приключения 🌍', duration: 2960 }, 
+            { id: 'wzNRYkrRxmk', title: '💰 ТРИ КОТА 🐾 Деловые КОТИКИ: Банковские серии 🏦💳', duration: 2974 }, 
+            { id: 'du97gvD2MzA', title: '🚁 ТРИ КОТА 🧳 ✈️ Про самолёты ☁️', duration: 2696 }  
         ];
         
         const introId = 'UbY3QIM69Ho';
@@ -165,7 +190,7 @@
             }
 
             let timeInCycle = currentTimestamp % totalDuration;
-            let currentMovie = playlist;
+            let currentMovie = playlist[0];
             let startSeconds = 0;
 
             for (let i = 0; i < playlist.length; i++) {
@@ -185,6 +210,11 @@
             }
         }
 
+        // Запуск и синхронизация вещания раз в секунду
+        updateLiveBroadcast();
+        setInterval(updateLiveBroadcast, 1000);
+
+        // УПРАВЛЕНИЕ ЗВУКОМ (Дописано до конца и исправлено)
         document.getElementById('muteBtn').addEventListener('click', function() {
             const playerIframe = document.getElementById('tv-player');
             isMuted = !isMuted;
@@ -196,16 +226,20 @@
                 this.innerHTML = "🔊 Выключить звук";
                 playerIframe.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
             }
+            
+            // Быстро обновляем URL плеера, чтобы применить состояние звука без багов
+            updateLiveBroadcast();
         });
 
+        // УПРАВЛЕНИЕ ПОЛНЫМ ЭКРАНОМ
         document.getElementById('fullscreenBtn').addEventListener('click', function() {
-            const container = document.querySelector('.video-container');
-            if (container.requestFullscreen) container.requestFullscreen();
-            else if (container.webkitRequestFullscreen) container.webkitRequestFullscreen();
+            const container = document.getElementById('videoContainer');
+            if (!document.fullscreenElement) {
+                container.requestFullscreen().catch(err => {
+                    alert(`Ошибка перехода в полный экран: ${err.message}`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
         });
-
-        updateLiveBroadcast();
-        setInterval(updateLiveBroadcast, 5000);
     </script>
-</body>
-</html>
