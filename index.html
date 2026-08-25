@@ -96,7 +96,7 @@
     </div>
 
     <div class="controls">
-        <button class="btn" id="muteBtn">🔇 Включить звук</button>
+        <button class="btn" id="muteBtn"> Lumix 🔇 Включить звук</button>
         <button class="btn" id="fullscreenBtn">📺 Полный экран</button>
     </div>
 
@@ -122,22 +122,17 @@
             firebase.initializeApp(firebaseConfig);
             const database = firebase.database();
             
-            // НОВАЯ ЖЕЛЕЗОБЕТОННАЯ ЛОГИКА ДЛЯ УЧЕТА ВСЕХ УСТРОЙСТВ И ВКЛАДОК
-            // Создаем случайный ID для каждой открытой вкладки или устройства отдельно
             const sessionID = "user_" + Math.floor(Math.random() * 1000000) + "_" + Date.now();
             const myPresenceRef = database.ref('online_users/' + sessionID);
             const connectedRef = database.ref('.info/connected');
 
             connectedRef.on('value', (snapshot) => {
                 if (snapshot.val() === true) {
-                    // Сохраняем в базу информацию о конкретном подключении
                     myPresenceRef.set({ active: true, time: Date.now() });
-                    // При закрытии вкладки или потере сети — удаляем именно этот ID
                     myPresenceRef.onDisconnect().remove();
                 }
             });
 
-            // Слушаем общее количество уникальных сессий в ветке online_users
             database.ref('online_users').on('value', (snapshot) => {
                 const count = snapshot.numChildren();
                 document.getElementById('onlineCount').textContent = count || 1;
@@ -146,19 +141,16 @@
             document.getElementById('onlineCount').textContent = "1";
         }
 
-        // Хронологический плейлист марафона
+        // ТВОЙ СПИСОК СМЕШАРИКОВ
         const playlist = [
-            { id: 'v=Lu0pj1L6mL8', title: '✌️Фиксики👀 ПЕЧАТНАЯ МАШИНКА🖨️', duration: 2226 },
-            { id: 'v=Lu0pj1L6mL8', title: 'Смешарики',   duration: 7335 },
-            { id: 'v=Lu0pj1L6mL8', title: 'Смешарики',   duration: 7217 },
-            { id: 'v=Lu0pj1L6mL8', title: 'Смешарики',   duration: 7200 },
-            { id: 'v=Lu0pj1L6mL8', title: 'Смешарики',  duration: 7916 },
-            { id: 'v=Lu0pj1L6mL8', title: 'Смешарики', duration: 6835 }
+            { id: 'Lu0pj1L6mL8', title: 'Смешарики', duration: 19326 }
+            { id: 'v=09NJe1ne62E', title: 'Смешарики', duration: 19326 }
+            { id: 'LexgvTUU6Q4', title: 'Смешарики', duration: 19326 }
         ];
         
         const introId = 'UbY3QIM69Ho';
         const totalDuration = playlist.reduce((sum, item) => sum + item.duration, 0);
-        let isMuted = true;
+        let isMuted = true; // СТРОГО ТАК ДЛЯ ОБХОДА БЛОКИРОВОК АВТОЗАПУСКА
 
         const p1 = "https://www.";
         const p2 = "youtube";
@@ -184,19 +176,11 @@
             }
 
             let timeInCycle = currentTimestamp % totalDuration;
-            let currentMovie = playlist;
-            let startSeconds = 0;
+            let currentMovie = playlist[0];
+            let startSeconds = Math.floor(timeInCycle);
 
-            for (let i = 0; i < playlist.length; i++) {
-                if (timeInCycle < playlist[i].duration) {
-                    currentMovie = playlist[i];
-                    startSeconds = Math.floor(timeInCycle);
-                    break;
-                }
-                timeInCycle -= playlist[i].duration;
-            }
-
-            const movieUrl = p1 + p2 + p3 + p4 + currentMovie.id + `?autoplay=1&start=${startSeconds}&mute=${muteParam}&controls=0&enablejsapi=1`;
+            // ДОБАВИЛИ ОБЯЗАТЕЛЬНЫЙ ПАРАМЕТР МУТА И АВТОПЛЕЯ ДЛЯ БРАУЗЕРОВ
+            const movieUrl = p1 + p2 + p3 + p4 + currentMovie.id + `?autoplay=1&start=${startSeconds}&mute=${muteParam}&controls=0&enablejsapi=1&autoplay=1`;
             
             if (!playerIframe.src.includes(currentMovie.id)) {
                 playerIframe.src = movieUrl;
@@ -209,7 +193,7 @@
             isMuted = !isMuted;
             
             if (isMuted) {
-                this.innerHTML = "🔇 Включить звук";
+                this.innerHTML = " Lumix 🔇 Включить звук";
                 playerIframe.contentWindow.postMessage('{"event":"command","func":"mute","args":""}', '*');
             } else {
                 this.innerHTML = "🔊 Выключить звук";
