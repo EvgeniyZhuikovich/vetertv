@@ -51,7 +51,7 @@
         
         iframe { width: 100% !important; height: 480px !important; border: none; display: block; }
         
-        /* Растягивание плеера на весь монитор в полноэкранном режиме */
+        /* Авто-растягивание плеера на весь экран */
         .video-container:fullscreen iframe,
         .video-container:fullscreen .video-mask,
         .video-container:-webkit-full-screen iframe,
@@ -101,10 +101,9 @@
     </div>
 
     <div class="online-counter">
-        👀 Онлайн: <span class="online-number" id="onlineCount">Загрузка...</span> чел.
+        👀 Онлайн: <span class="online-number" id="onlineCount">0</span> чел.
     </div>
 
-    <!-- Подключение Firebase (Версия compat для стабильности) -->
     <script src="https://gstatic.com"></script>
     <script src="https://gstatic.com"></script>
 
@@ -123,7 +122,7 @@
             firebase.initializeApp(firebaseConfig);
             const database = firebase.database();
             
-            // Защита от склеивания онлайна на одном роутере
+            // Генерация честного ID сессии для каждого устройства/вкладки отдельно
             const sessionID = "user_" + Math.floor(Math.random() * 1000000) + "_" + Date.now();
             const myPresenceRef = database.ref('online_users/' + sessionID);
             const connectedRef = database.ref('.info/connected');
@@ -135,15 +134,16 @@
                 }
             });
 
+            // ИСПРАВЛЕНО: Выводим ТОЛЬКО чистый ответ из Firebase без искусственных заглушек
             database.ref('online_users').on('value', (snapshot) => {
                 const count = snapshot.numChildren();
-                document.getElementById('onlineCount').textContent = count || 1;
+                document.getElementById('onlineCount').textContent = count;
             });
         } catch(e) {
-            document.getElementById('onlineCount').textContent = "1";
+            document.getElementById('onlineCount').textContent = "0";
         }
 
-        // НАШ ИДЕАЛЬНЫЙ 12-ЧАСОВОЙ ОФОРМЛЕННЫЙ ПЛЕЙЛИСТ СМЕШАРИКОВ
+        // ТВОЙ ОКОНЧАТЕЛЬНЫЙ ТОЧНЫЙ ПЛЕЙЛИСТ СМЕШАРИКОВ
         const playlist = [
             { id: 'Lu0pj1L6mL8', title: '🔥 СМЕШАРИКИ: МЕГА-МАРАФОН СЕРИЙ ⚡', duration: 19326 }, // 5:22:06
             { id: '09NJe1ne62E', title: '🚀 СМЕШАРИКИ: ТОПОВЫЙ СБОРНИК МУЛЬТИКОВ 👑', duration: 12325 }, // 3:25:25
@@ -168,7 +168,6 @@
             const playerIframe = document.getElementById('tv-player');
             const muteParam = isMuted ? 1 : 0;
 
-            // Заставка на 11 секунд ровно каждые 30 минут
             if ((minutes === 0 || minutes === 30) && seconds < 11) {
                 const introUrl = p1 + p2 + p3 + p4 + introId + `?autoplay=1&mute=${muteParam}&controls=0&enablejsapi=1`;
                 if (playerIframe.src !== introUrl) {
@@ -178,9 +177,8 @@
                 return;
             }
 
-            // Расчет секунд для синхронизации прямого эфира
             let timeInCycle = currentTimestamp % totalDuration;
-            let currentMovie = playlist[0];
+            let currentMovie = playlist;
             let startSeconds = 0;
 
             for (let i = 0; i < playlist.length; i++) {
@@ -200,7 +198,6 @@
             }
         }
 
-        // Управление кастомной кнопкой звука
         document.getElementById('muteBtn').addEventListener('click', function() {
             const playerIframe = document.getElementById('tv-player');
             isMuted = !isMuted;
@@ -214,14 +211,12 @@
             }
         });
 
-        // Управление полным экраном
         document.getElementById('fullscreenBtn').addEventListener('click', function() {
             const container = document.querySelector('.video-container');
             if (container.requestFullscreen) container.requestFullscreen();
             else if (container.webkitRequestFullscreen) container.webkitRequestFullscreen();
         });
 
-        // Запуск и обновление сетки вещания
         updateLiveBroadcast();
         setInterval(updateLiveBroadcast, 5000);
     </script>
