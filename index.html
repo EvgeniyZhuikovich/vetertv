@@ -64,6 +64,10 @@
         }
         .online-number { color: #22c55e; font-weight: bold; text-shadow: 0 0 10px rgba(34, 197, 94, 0.2); }
     </style>
+
+    <!-- Подключаем официальные скрипты Firebase для работы в браузере -->
+    <script src="https://gstatic.com"></script>
+    <script src="https://gstatic.com"></script>
 </head>
 <body>
 
@@ -86,38 +90,57 @@
     </div>
 
     <script>
-        // ОБЛАЧНЫЙ ЖИВОЙ СЧЁТЧИК УСТРОЙСТВ
+        // НАСТОЯЩИЙ МГНОВЕННЫЙ СЧЁТЧИК УСТРОЙСТВ ЧЕРЕЗ FIREBASE
         function initRealOnlineCounter() {
-            // Генерируем уникальный маркер для этой вкладки
-            if (!sessionStorage.getItem('vetertv_device_unique_token')) {
+            // Твоя проверенная конфигурация проекта school6by
+            const firebaseConfig = {
+                apiKey: "AIzaSyDs1PGAs9PlAifxph8FZYjjLrkwvttLTxE",
+                authDomain: "://firebaseapp.com",
+                databaseURL: "https://firebaseio.com",
+                projectId: "school6by"
+            };
+
+            // Инициализируем приложение, если оно еще не запущено
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            const database = firebase.database();
+
+            // Создаем токен сессии, чтобы ПК и телефон считались отдельно!
+            if (!sessionStorage.getItem('vetertv_device_session_token')) {
                 const randomId = Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
-                sessionStorage.setItem('vetertv_device_unique_token', randomId);
+                sessionStorage.setItem('vetertv_device_session_token', randomId);
             }
-            const token = sessionStorage.getItem('vetertv_device_unique_token');
+            const deviceToken = sessionStorage.getItem('vetertv_device_session_token');
+            
+            const myStatusRef = database.ref(`online_users/${deviceToken}`);
+            const connectedRef = database.ref(".info/connected");
 
-            // Ссылка на стабильный внешний счётчик, разделяющий ПК и телефон
-            const counterUrl = `https://leandrosn.com{token}`;
+            // Отслеживаем статус подключения
+            connectedRef.on("value", (snap) => {
+                if (snap.val() === true) {
+                    // Как только вкладка закрывается или обновляется — запись стирается из базы сама
+                    myStatusRef.onDisconnect().remove();
+                    // Записываем устройство в онлайн
+                    myStatusRef.set(true);
+                }
+            });
 
-            function fetchCount() {
-                fetch(counterUrl)
-                    .then(res => res.json())
-                    .then(data => {
-                        const currentViewers = data.online || 1;
-                        document.getElementById('onlineCount').textContent = currentViewers;
-                    })
-                    .catch(() => {
-                        document.getElementById('onlineCount').textContent = "1";
-                    });
-            }
-
-            // Опрашиваем сервер сразу и затем каждые 6 секунд
-            fetchCount();
-            setInterval(fetchCount, 6000);
+            // Слушаем базу в реальном времени и сразу выводим точную цифру устройств
+            database.ref("online_users").on("value", (snapshot) => {
+                let count = 0;
+                if (snapshot.exists()) {
+                    count = Object.keys(snapshot.val()).length;
+                }
+                if (count < 1) count = 1; // Страховка, если ты сам на сайте
+                document.getElementById('onlineCount').textContent = count;
+            });
         }
 
+        // Запуск профессионального счетчика
         initRealOnlineCounter();
 
-        // НАСТРОЙКИ ОСНОВНОГО ПЛЕЙЛИСТА КОТОВ
+        // НАСТРОЙКИ ПЛЕЙЛИСТА КОТОВ
         const playlist = [
             { id: 'AuMRLtc9o8E', title: '🛸 ТРИ КОТА 🛰️ Космические приключения 🌍', duration: 2960 }, 
             { id: 'wzNRYkrRxmk', title: '💰 ТРИ КОТА 🐾 Деловые КОТИКИ: Банковские серии 🏦💳', duration: 2974 }, 
@@ -125,11 +148,11 @@
         ];
         const totalDuration = playlist.reduce((sum, item) => sum + item.duration, 0);
 
-        const introId = 'UbY3QIM69Ho'; // ID твоей фирменной заставки
-        const introDuration = 11; // Длина заставки в секундах
+        const introId = 'UbY3QIM69Ho'; 
+        const introDuration = 11; 
 
         let isMuted = true;
-        let lastLoadedVideoId = ""; // Закрепитель ID, полностью убирающий перезагрузки плеера
+        let lastLoadedVideoId = ""; 
 
         const p1 = "https://www.";
         const p2 = "youtube";
@@ -172,7 +195,7 @@
                 timeInCycle -= playlist[i].duration;
             }
 
-            // 3. ОТПРАВКА ССЫЛКИ В ПЛЕЕР (СТРОГО ОДИН РАЗ)
+            // 3. БЕЗОПАСНАЯ ОТПРАВКА ССЫЛКИ В ПЛЕЕР (СТРОГО ОДИН РАЗ, БЕЗ МОРГАНИЙ)
             if (currentMovie && playerIframe) {
                 if (lastLoadedVideoId !== currentMovie.id) {
                     lastLoadedVideoId = currentMovie.id;
@@ -182,7 +205,6 @@
             }
         }
 
-        // Запуск вещания и синхронизация раз в секунду
         updateLiveBroadcast();
         setInterval(updateLiveBroadcast, 1000);
 
@@ -209,12 +231,3 @@
             const container = document.getElementById('videoContainer');
             if (!document.fullscreenElement) {
                 container.requestFullscreen().catch(err => {
-                    alert(`Ошибка перехода в полный экран: ${err.message}`);
-                });
-            } else {
-                document.exitFullscreen();
-            }
-        });
-    </script>
-</body>
-</html>
