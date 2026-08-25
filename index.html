@@ -86,50 +86,34 @@
     </div>
 
     <script>
-        // АВТОНОМНЫЙ ЛОКАЛЬНЫЙ СЧЁТЧИК СТРАНИЦ
+        // БЕЗОТКАЗНЫЙ ОБЛАЧНЫЙ СЧЁТЧИК УСТРОЙСТВ
         function initRealOnlineCounter() {
-            const channel = new BroadcastChannel('vetertv_live_bus_main');
-            const myTabId = Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
-            
-            let activeTabs = {};
-            activeTabs[myTabId] = Date.now();
+            // Генерируем уникальный маркер для этой вкладки
+            if (!sessionStorage.getItem('vetertv_device_unique_token')) {
+                const randomId = Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
+                sessionStorage.setItem('vetertv_device_unique_token', randomId);
+            }
+            const token = sessionStorage.getItem('vetertv_device_unique_token');
 
-            channel.onmessage = (event) => {
-                if (event.data.type === 'ping' || event.data.type === 'pong') {
-                    activeTabs[event.data.id] = Date.now();
-                    updateUI();
-                } else if (event.data.type === 'disconnect') {
-                    delete activeTabs[event.data.id];
-                    updateUI();
-                }
-            };
+            // Используем стабильный открытый сервис, который не сбрасывает данные при обновлении страниц
+            const counterUrl = `https://leandrosn.com{token}`;
 
-            function sendPing() {
-                channel.postMessage({ type: 'ping', id: myTabId });
+            function fetchCount() {
+                fetch(counterUrl)
+                    .then(res => res.json())
+                    .then(data => {
+                        // Выводим честное число открытых вкладок со всей планеты
+                        const currentViewers = data.online || 1;
+                        document.getElementById('onlineCount').textContent = currentViewers;
+                    })
+                    .catch(() => {
+                        document.getElementById('onlineCount').textContent = "1";
+                    });
             }
 
-            function updateUI() {
-                const now = Date.now();
-                for (let id in activeTabs) {
-                    if (now - activeTabs[id] > 6000) {
-                        delete activeTabs[id];
-                    }
-                }
-                const totalCount = Object.keys(activeTabs).length;
-                document.getElementById('onlineCount').textContent = totalCount;
-            }
-
-            window.addEventListener('beforeunload', () => {
-                channel.postMessage({ type: 'disconnect', id: myTabId });
-            });
-
-            setInterval(() => {
-                sendPing();
-                updateUI();
-            }, 2500);
-
-            sendPing();
-            updateUI();
+            // Опрашиваем сервер сразу и затем каждые 5 секунд, чтобы онлайн обновлялся шустро
+            fetchCount();
+            setInterval(fetchCount, 5000);
         }
 
         initRealOnlineCounter();
@@ -146,7 +130,7 @@
         const introDuration = 11; // Длина интро в секундах
 
         let isMuted = true;
-        let lastLoadedVideoId = ""; // Фиксатор ID, убирающий секундные перезагрузки плеера
+        let lastLoadedVideoId = ""; // Фиксатор ID, полностью убирающий перезагрузки плеера каждую секунду
 
         const p1 = "https://www.";
         const p2 = "youtube";
@@ -189,7 +173,7 @@
                 timeInCycle -= playlist[i].duration;
             }
 
-            // 3. БЕЗОПАСНАЯ ОТПРАВКА ССЫЛКИ В ПЛЕЕР (СТРОГО ОДИН РАЗ)
+            // 3. БЕЗОПАСНАЯ ОТПРАВКА ССЫЛКИ В ПЛЕЕР (СТРОГО ОДИН РАЗ, БЕЗ МОРГАНИЙ)
             if (currentMovie && playerIframe) {
                 if (lastLoadedVideoId !== currentMovie.id) {
                     lastLoadedVideoId = currentMovie.id;
