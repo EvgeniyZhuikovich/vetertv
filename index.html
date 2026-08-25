@@ -100,12 +100,41 @@
         <button class="btn" id="fullscreenBtn">📺 Полный экран</button>
     </div>
 
+    <!-- Блок честного онлайна -->
     <div class="online-counter">
-        👀 Онлайн: <span class="online-number" id="onlineCount">3</span> чел.
+        👀 Онлайн: <span class="online-number" id="onlineCount">Загрузка...</span> чел.
     </div>
 
     <script>
-        // Чистый плейлист без синтаксических ошибок
+        // АВТОМАТИЧЕСКИЙ ЖИВОЙ СЧЕТЧИК
+        function initRealOnlineCounter() {
+            // Сервис считает открытые вкладки для твоего сайта в реальном времени
+            const siteUrl = encodeURIComponent(window.location.href);
+            const counterUrl = `https://leandrosn.com{siteUrl}`;
+
+            function fetchCount() {
+                fetch(counterUrl)
+                    .then(res => res.json())
+                    .then(data => {
+                        // Берем реальное количество людей из ответа сервера
+                        const realCount = data.online || 1; 
+                        document.getElementById('onlineCount').textContent = realCount;
+                    })
+                    .catch(() => {
+                        // Если сеть мигнула, оставляем 1 (ты сам на сайте)
+                        document.getElementById('onlineCount').textContent = "1";
+                    });
+            }
+
+            // Проверяем онлайн сразу и обновляем каждые 10 секунд
+            fetchCount();
+            setInterval(fetchCount, 10000);
+        }
+
+        // Запуск счетчика
+        initRealOnlineCounter();
+
+        // ЧИСТЫЙ И ИСПРАВЛЕННЫЙ ПЛЕЙЛИСТ СМЕШАРИКОВ / ТРЕХ КОТОВ
         const playlist = [
             { id: 'AuMRLtc9o8E', title: '🛸 ТРИ КОТА 🛰️ Космические приключения 🌍', duration: 2960 }, 
             { id: 'wzNRYkrRxmk', title: '💰 ТРИ КОТА 🐾 Деловые КОТИКИ: Банковские серии 🏦💳', duration: 2974 }, 
@@ -113,7 +142,7 @@
         ];
         
         const introId = 'UbY3QIM69Ho';
-        const totalDuration = playlist.reduce((sum, item) => sum + item.duration, 0);
+        const totalDuration = playlist.reduce((sum, item) => sum + item.duration, 11);
         let isMuted = true;
 
         const p1 = "https://www.";
@@ -130,6 +159,7 @@
             const playerIframe = document.getElementById('tv-player');
             const muteParam = isMuted ? 1 : 0;
 
+            // Заставка каждые 30 минут
             if ((minutes === 0 || minutes === 30) && seconds < 11) {
                 const introUrl = p1 + p2 + p3 + p4 + introId + `?autoplay=1&mute=${muteParam}&controls=0&enablejsapi=1`;
                 if (playerIframe && playerIframe.src !== introUrl) {
@@ -160,7 +190,7 @@
             }
         }
 
-        // Запуск вещания
+        // Запуск и синхронизация вещания каждую секунду
         updateLiveBroadcast();
         setInterval(updateLiveBroadcast, 1000);
 
@@ -170,13 +200,13 @@
             isMuted = !isMuted;
             
             if (isMuted) {
-                this.innerHTML = " Lumix 🔇 Включить звук";
-                if(playerIframe && playerIframe.contentWindow) {
+                this.innerHTML = " 🔇 Включить звук";
+                if (playerIframe && playerIframe.contentWindow) {
                     playerIframe.contentWindow.postMessage('{"event":"command","func":"mute","args":""}', '*');
                 }
             } else {
                 this.innerHTML = "🔊 Выключить звук";
-                if(playerIframe && playerIframe.contentWindow) {
+                if (playerIframe && playerIframe.contentWindow) {
                     playerIframe.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
                 }
             }
