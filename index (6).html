@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ветер ТВ — Прямой эфир</title>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+        }
+        h1 {
+            font-size: 3.5rem;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            color: #38bdf8;
+            text-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+            letter-spacing: 2px;
+        }
+        .live-badge {
+            background-color: #ef4444;
+            color: white;
+            padding: 4px 10px;
+            font-weight: bold;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            display: inline-block;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            animation: blink 1.5s infinite;
+        }
+        @keyframes blink { 50% { opacity: 0.5; } }
+        .subtitle { font-size: 1.2rem; color: #94a3b8; margin-bottom: 25px; font-weight: 500; }
+        
+        .video-container {
+            position: relative;
+            width: 850px;
+            max-width: 100%;
+            height: 480px; 
+            margin: 0 auto;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+        }
+        .video-mask { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 30; background: transparent; }
+        
+        iframe { width: 100% !important; height: 480px !important; border: none; display: block; }
+        
+        .controls { margin-top: 20px; display: flex; justify-content: center; gap: 15px; }
+        .btn {
+            background-color: #0284c7; color: white; border: none; padding: 12px 24px;
+            font-size: 1rem; font-weight: 600; cursor: pointer; border-radius: 8px;
+            transition: all 0.2s ease; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .btn:hover { background-color: #0369a1; transform: translateY(-1px); }
+        .online-counter {
+            margin-top: 35px; font-size: 1.3rem; color: #94a3b8; background: #1e293b;
+            display: inline-block; padding: 8px 20px; border-radius: 20px; border: 1px solid #334155;
+        }
+        .online-number { color: #22c55e; font-weight: bold; text-shadow: 0 0 10px rgba(34, 197, 94, 0.2); }
+    </style>
+</head>
+<body>
+
+    <h1>Ветер ТВ</h1>
+    <div class="live-badge">Прямой эфир</div>
+    <div class="subtitle" id="currentTrack">Загрузка эфира...</div>
+
+    <div class="video-container" id="videoContainer">
+        <div class="video-mask"></div>
+        <iframe id="tv-player" allow="autoplay; fullscreen" allowfullscreen></iframe>
+    </div>
+
+    <div class="controls">
+        <button class="btn" id="muteBtn">🔇 Включить звук</button>
+        <button class="btn" id="fullscreenBtn">📺 Полный экран</button>
+    </div>
+
+    <div class="online-counter">
+        👀 Онлайн: <span class="online-number" id="onlineCount">Загрузка...</span> чел.
+    </div>
+
+    <script>
+        // ЧЕСТНЫЙ СЧЁТЧИК УСТРОЙСТВ ПО УНИКАЛЬНЫМ ТОКЕНАМ СЕССИИ
+        function initRealOnlineCounter() {
+            // Создаем случайный уникальный токен для конкретной открытой вкладки
+            if (!sessionStorage.getItem('vetertv_device_session_token')) {
+                const randomId = Math.random().toString(36).substring(2, 11) + Date.now().toString(36);
+                sessionStorage.setItem('vetertv_device_session_token', randomId);
+            }
+            const deviceToken = sessionStorage.getItem('vetertv_device_session_token');
+
+            // Подключаемся к стабильному облачному счётчику, передавая токен устройства
+            const counterUrl = `https://leandrosn.com{deviceToken}`;
+
+            function fetchCount() {
+                fetch(counterUrl)
+                    .then(res => res.json())
+                    .then(data => {
+                        // Сервер теперь видит разные ID токенов и перестает склеивать их по общему IP
+                        const totalViewers = data.online || 1;
+                        document.getElementById('onlineCount').textContent = totalViewers;
+                    })
+                    .catch(() => {
+                        document.getElementById('onlineCount').textContent = "1";
+                    });
+            }
+
+            // Обновляем данные каждые 5 секунд, чтобы изменения влетали быстро
+            fetchCount();
+            setInterval(fetchCount, 5000);
+        }
+
+        initRealOnlineCounter();
+
+        // НАСТРОЙКИ ПЛЕЙЛИСТА КОТОВ
+        const playlist = [
+            { id: 'AuMRLtc9o8E', title: '🛸 ТРИ КОТА 🛰️ Космические приключения 🌍', duration: 2960 }, 
+            { id: 'wzNRYkrRxmk', title: '💰 ТРИ КОТА 🐾 Деловые КОТИКИ: Банковские серии 🏦💳', duration: 2974 }, 
+            { id: 'du97gvD2MzA', title: '🚁 ТРИ КОТА 🧳 ✈️ Про самолёты ☁️', duration: 2696 }  
+        ];
+        const totalDuration = playlist.reduce((sum, item) => sum + item.duration, 0);
+
+        const introId = 'UbY3QIM69Ho'; 
+        const introDuration = 11; 
+
+        let isMuted = true;
+        let lastLoadedVideoId = ""; 
+
+        const p1 = "https://www.";
+        const p2 = "youtube";
+        const p3 = ".com/";
+        const p4 = "embed/";
+
+        function updateLiveBroadcast() {
+            const currentTimestamp = Math.floor(Date.now() / 1000);
+            const now = new Date();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            
+            const playerIframe = document.getElementById('tv-player');
+            const muteParam = isMuted ? 1 : 0;
+
+            // Заставка каждые 30 минут
+            if ((minutes === 0 || minutes === 30) && seconds < introDuration) {
+                const introUrl = p1 + p2 + p3 + p4 + introId + `?autoplay=1&mute=${muteParam}&controls=0&enablejsapi=1`;
+                if (playerIframe && lastLoadedVideoId !== introId) {
+                    lastLoadedVideoId = introId;
+                    playerIframe.src = introUrl;
+                    document.getElementById('currentTrack').textContent = '📺 Заставка телеканала Ветер ТВ';
+                }
+                return;
+            }
+
+            let timeInCycle = currentTimestamp % totalDuration;
+            let currentMovie = null;
+
+            for (let i = 0; i < playlist.length; i++) {
+                if (timeInCycle < playlist[i].duration) {
+                    currentMovie = {
+                        id: playlist[i].id,
+                        title: playlist[i].title,
+                        startFrom: Math.floor(timeInCycle)
+                    };
+                    break;
+                }
+                timeInCycle -= playlist[i].duration;
+            }
+
+            if (currentMovie && playerIframe) {
+                if (lastLoadedVideoId !== currentMovie.id) {
+                    lastLoadedVideoId = currentMovie.id;
+                    playerIframe.src = p1 + p2 + p3 + p4 + currentMovie.id + `?autoplay=1&start=${currentMovie.startFrom}&mute=${muteParam}&controls=0&enablejsapi=1`;
+                    document.getElementById('currentTrack').textContent = 'Сейчас в эфире: ' + currentMovie.title;
+                }
+            }
+        }
+
+        updateLiveBroadcast();
+        setInterval(updateLiveBroadcast, 1000);
+
+        // УПРАВЛЕНИЕ ЗВУКОМ
+        document.getElementById('muteBtn').addEventListener('click', function() {
+            const playerIframe = document.getElementById('tv-player');
+            isMuted = !isMuted;
+            
+            if (isMuted) {
+                this.innerHTML = "🔇 Включить звук";
+                if (playerIframe && playerIframe.contentWindow) {
+                    playerIframe.contentWindow.postMessage('{"event":"command","func":"mute","args":""}', '*');
+                }
+            } else {
+                this.innerHTML = "🔊 Выключить звук";
+                if (playerIframe && playerIframe.contentWindow) {
+                    playerIframe.contentWindow.postMessage('{"event":"command","func":"unMute","args":""}', '*');
+                }
+            }
+        });
+
+        // УПРАВЛЕНИЕ ПОЛНЫМ ЭКРАНОМ
+        document.getElementById('fullscreenBtn').addEventListener('click', function() {
+            const container = document.getElementById('videoContainer');
+            if (!document.fullscreenElement) {
+                container.requestFullscreen().catch(err => {
+                    alert(`Ошибка перехода в полный экран: ${err.message}`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+        });
+    </script>
+</body>
+</html>
