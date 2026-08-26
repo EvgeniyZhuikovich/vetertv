@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ветер ТВ — Прямой эфир</title>
-    <!-- Подключаем скрипт YouTube API асинхронно, чтобы сайт не вис при загрузке -->
+    <!-- Подключаем скрипт YouTube API асинхронно -->
     <script src="https://youtube.com" async></script>
     <style>
-        /* Оригинальный темный стиль Ветер ТВ */
+        /* Твой оригинальный темный стиль Ветер ТВ */
         body {
             background-color: #0f172a;
             color: #f8fafc;
@@ -23,6 +23,7 @@
             color: #fff;
             font-size: 28px;
             margin-bottom: 5px;
+            margin-top: 10px;
         }
 
         .subtitle {
@@ -35,16 +36,16 @@
         #broadcastStatus {
             font-size: 16px;
             color: #94a3b8;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
             font-weight: 500;
         }
 
-        /* Контейнер плеера 16:9 */
+        /* КОНТЕЙНЕР ПЛЕЕРА 16:9 — ИСПРАВЛЕННЫЙ СТИЛЬ */
         .video-container {
             width: 100%;
             max-width: 800px;
             position: relative;
-            padding-bottom: 56.25%; /* Пропорции 16:9 */
+            padding-bottom: 56.25%; /* Четкие пропорции экрана без искажений */
             height: 0;
             background: #000;
             border-radius: 12px;
@@ -52,7 +53,8 @@
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
         }
 
-        .video-container iframe, #player {
+        /* Стили для самого плеера внутри контейнера */
+        #player {
             position: absolute;
             top: 0;
             left: 0;
@@ -82,23 +84,13 @@
             color: #fff;
         }
 
-        #btnMuteToggle {
-            background: #0ea5e9;
-        }
-        #btnMuteToggle:hover {
-            background: #0284c7;
-        }
+        #btnMuteToggle { background: #0ea5e9; }
+        #btnMuteToggle:hover { background: #0284c7; }
 
-        #btnFullscreen {
-            background: #475569;
-        }
-        #btnFullscreen:hover {
-            background: #334155;
-        }
+        #btnFullscreen { background: #475569; }
+        #btnFullscreen:hover { background: #334155; }
 
-        button:active {
-            transform: scale(0.98);
-        }
+        button:active { transform: scale(0.98); }
 
         /* Онлайн счетчик */
         #onlineCounter {
@@ -119,8 +111,8 @@
     
     <div id="broadcastStatus">Загрузка эфира...</div>
     
+    <!-- ИСПРАВЛЕННАЯ РАЗМЕТКА ПЛЕЕРА -->
     <div class="video-container">
-        <!-- Сюда скрипт YouTube API вставит плеер -->
         <div id="player"></div>
     </div>
 
@@ -133,11 +125,11 @@
 
 <script>
 // НАСТРОЙКИ ЭФИРА 5 СЕЗОНА
-const VIDEO_ID = 'ux79NJYKYHU'; // ID видео со всем 5 сезоном
+const VIDEO_ID = 'ux79NJYKYHU'; // Твой ID видео со всем 5 сезоном
 const VIDEO_DURATION = 13176;  // Длина видео в секундах (3ч 39мин 36сек)
 let player = null;
 
-// 1. Инициализация YouTube API (вызывается один раз)
+// Инициализация YouTube API
 window.onYouTubeIframeAPIReady = function() {
     const startSec = getLiveTimeOffset();
 
@@ -145,8 +137,8 @@ window.onYouTubeIframeAPIReady = function() {
         videoId: VIDEO_ID,
         playerVars: {
             'autoplay': 1,
-            'controls': 0, // Скрываем дефолтные кнопки управления YouTube
-            'mute': 1,     // Обход блокировок автоплея современных браузеров
+            'controls': 0, // Кастомные кнопки
+            'mute': 1,     // Фикс автоплея для браузеров
             'start': startSec,
             'rel': 0,
             'modestbranding': 1
@@ -162,40 +154,36 @@ function onPlayerReady(event) {
     document.getElementById('broadcastStatus').innerText = "🔴 ПРЯМОЙ ЭФИР: 5 СЕЗОН НИНДЗЯГО";
     event.target.playVideo();
     
-    // Мягкая синхронизация времени раз в 5 секунд — вкладка больше не упадет по памяти!
+    // Мягкая синхронизация времени раз в 5 секунд (без утечек памяти)
     setInterval(syncBroadcastTime, 5000);
 }
 
 function onPlayerStateChange(event) {
-    // Если зритель нажал паузу, насильно возвращаем его в живой эфир
     if (event.data === YT.PlayerState.PAUSED) {
         player.playVideo();
     }
 }
 
-// 2. Математика кругового эфира по времени суток
+// Расчет секунды видео по времени суток
 function getLiveTimeOffset() {
     const now = new Date();
-    // Сколько секунд прошло с полуночи текущего дня
     const secondsSinceMidnight = (now.getHours() * 3600) + (now.getMinutes() * 60) + now.getSeconds();
-    // Остаток деления дает точную секунду видео для текущего момента времени
     return Math.floor(secondsSinceMidnight % VIDEO_DURATION);
 }
 
-// 3. Функция мягкой корректировки (без перезагрузки плеера)
+// Мягкая корректировка времени
 function syncBroadcastTime() {
     if (!player || typeof player.getCurrentTime !== 'function') return;
     
     const targetSeconds = getLiveTimeOffset();
     const currentSeconds = player.getCurrentTime();
     
-    // Если зритель отстал от общего эфира более чем на 6 секунд, плавно перематываем
     if (Math.abs(currentSeconds - targetSeconds) > 6) {
         player.seekTo(targetSeconds, true);
     }
 }
 
-// 4. Логика кастомных кнопок звука и фуллскрина
+// Кнопка звука
 document.getElementById('btnMuteToggle').addEventListener('click', () => {
     if (!player) return;
     if (player.isMuted()) {
@@ -207,22 +195,18 @@ document.getElementById('btnMuteToggle').addEventListener('click', () => {
     }
 });
 
+// Кнопка полного экрана
 document.getElementById('btnFullscreen').addEventListener('click', () => {
     const iframe = document.getElementById('player');
     if (!iframe) return;
     
-    if (iframe.requestFullscreen) {
-        iframe.requestFullscreen();
-    } else if (iframe.mozRequestFullScreen) { // Firefox
-        iframe.mozRequestFullScreen();
-    } else if (iframe.webkitRequestFullscreen) { // Chrome, Safari, Opera
-        iframe.webkitRequestFullscreen();
-    } else if (iframe.msRequestFullscreen) { // IE/Edge
-        iframe.msRequestFullscreen();
-    }
+    if (iframe.requestFullscreen) { iframe.requestFullscreen(); }
+    else if (iframe.mozRequestFullScreen) { iframe.mozRequestFullScreen(); }
+    else if (iframe.webkitRequestFullscreen) { iframe.webkitRequestFullscreen(); }
+    else if (iframe.msRequestFullscreen) { iframe.msRequestFullscreen(); }
 });
 
-// 5. Легкий автономный онлайн-счетчик вкладок (через BroadcastChannel)
+// Автономный онлайн счетчик на BroadcastChannel
 const syncChannel = new BroadcastChannel('vetertv_stream_net');
 const myTabId = 'tab_' + Math.random().toString(36).substr(2, 9);
 let activeTabs = new Set([myTabId]);
@@ -254,18 +238,15 @@ function updateOnlineUI() {
     document.getElementById('onlineCount').innerText = activeTabs.size;
 }
 
-// Опрос вкладок раз в 4 секунды
 setInterval(() => {
     syncChannel.postMessage({ type: 'PING', id: myTabId });
 }, 4000);
 
-// Объявляем о себе при загрузке страницы
 window.addEventListener('DOMContentLoaded', () => {
     updateOnlineUI();
     syncChannel.postMessage({ type: 'PING', id: myTabId });
 });
 
-// Чистим память и убираем вкладку из онлайна при закрытии
 window.addEventListener('beforeunload', () => {
     syncChannel.postMessage({ type: 'CLOSE', id: myTabId });
     syncChannel.close();
