@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ветер ТВ — Прямой эфир</title>
-    <!-- Подключаем скрипт YouTube API асинхронно -->
+    <!-- Подключаем скрипт YouTube API асинхронно, чтобы сайт не вис -->
     <script src="https://youtube.com" async></script>
     <style>
-        /* Твой оригинальный темный стиль Ветер ТВ */
+        /* Твой оригинальный центрированный темный стиль Ветер ТВ */
         body {
             background-color: #0f172a;
             color: #f8fafc;
@@ -111,7 +111,7 @@
     
     <div id="broadcastStatus">Загрузка эфира...</div>
     
-    <!-- ИСПРАВЛЕННАЯ РАЗМЕТКА ПЛЕЕРА -->
+    <!-- ИСПРАВЛЕННАЯ РАЗМЕТКА ПЛЕЕРА БЕЗ КЛИКАБЕЛЬНЫХ ЗАГЛУШЕК -->
     <div class="video-container">
         <div id="player"></div>
     </div>
@@ -124,8 +124,8 @@
     <div id="onlineCounter">👀 Онлайн: <span id="onlineCount">Загрузка...</span> чел.</div>
 
 <script>
-// НАСТРОЙКИ ЭФИРА 5 СЕЗОНА
-const VIDEO_ID = 'ux79NJYKYHU'; // Твой ID видео со всем 5 сезоном
+// НАСТРОЙКИ ЭФИРА 5 СЕЗОНА НА ОСНОВЕ
+const VIDEO_ID = 'ux79NJYKYHU'; // ID видео со всем 5 сезоном
 const VIDEO_DURATION = 13176;  // Длина видео в секундах (3ч 39мин 36сек)
 let player = null;
 
@@ -137,8 +137,8 @@ window.onYouTubeIframeAPIReady = function() {
         videoId: VIDEO_ID,
         playerVars: {
             'autoplay': 1,
-            'controls': 0, // Кастомные кнопки
-            'mute': 1,     // Фикс автоплея для браузеров
+            'controls': 0, // Убираем дефолтные элементы YouTube
+            'mute': 1,     // Фикс автоплея для современных браузеров
             'start': startSec,
             'rel': 0,
             'modestbranding': 1
@@ -164,7 +164,7 @@ function onPlayerStateChange(event) {
     }
 }
 
-// Расчет секунды видео по времени суток
+// Расчет секунды видео по времени суток (синхронно для всех в 9:00)
 function getLiveTimeOffset() {
     const now = new Date();
     const secondsSinceMidnight = (now.getHours() * 3600) + (now.getMinutes() * 60) + now.getSeconds();
