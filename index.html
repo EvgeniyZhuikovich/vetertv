@@ -223,7 +223,14 @@
             </div>
         </div>
     </div>
-
+<script>
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && e.key === 'U')) {
+      e.preventDefault();
+      alert('Доступ к инструментам разработчика запрещён!');
+    }
+  });
+</script>
     <!-- ПОДКЛЮЧАЕМ ОФИЦИАЛЬНЫЙ API ПЛЕЕРА YOUTUBE ДЛЯ КОНТРОЛЯ ОЧЕРЕДИ -->
     <script src="https://youtube.com"></script>
 
