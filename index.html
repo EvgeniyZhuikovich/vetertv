@@ -4,7 +4,79 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ветер ТВ — Прямой эфир</title>
+
+    <!-- =========================================================== -->
+    <!-- 1. ЗАЩИТА ОТ ИНСТРУМЕНТОВ РАЗРАБОТЧИКА (САМАЯ СИЛЬНАЯ)        -->
+    <!-- =========================================================== -->
+    <script>
+        (function() {
+            'use strict';
+
+            // Блокировка всех комбинаций клавиш
+            document.addEventListener('keydown', function(e) {
+                // F12
+                if (e.key === 'F12') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+                // Ctrl+Shift+I / Ctrl+Shift+J / Ctrl+Shift+C
+                if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+                // Ctrl+U / Ctrl+S / Ctrl+P
+                if (e.ctrlKey && (e.key === 'U' || e.key === 'S' || e.key === 'P')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+                // F1 (справка)
+                if (e.key === 'F1') {
+                    e.preventDefault();
+                    return false;
+                }
+            }, true);
+
+            // Блокировка правого клика
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                return false;
+            }, true);
+
+            // Блокировка на уровне window
+            window.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.shiftKey) {
+                    e.preventDefault();
+                    return false;
+                }
+                if (e.metaKey && e.altKey && e.key === 'I') { // Mac
+                    e.preventDefault();
+                    return false;
+                }
+                if (e.key === 'F12') {
+                    e.preventDefault();
+                    return false;
+                }
+            }, true);
+
+            // Блокировка keyup
+            window.addEventListener('keyup', function(e) {
+                if (e.key === 'F12') {
+                    e.preventDefault();
+                    return false;
+                }
+            }, true);
+
+            console.log('🛡️ Защита от инструментов разработчика активирована!');
+        })();
+    </script>
+
     <style>
+        /* =========================================================== */
+        /* 2. СТИЛИ                                                   */
+        /* =========================================================== */
         * {
             margin: 0;
             padding: 0;
@@ -55,7 +127,7 @@
             gap: 16px;
         }
 
-        /* ===== ПЛЕЕР С НЕВИДИМЫМ ЩИТОМ ===== */
+        /* ПЛЕЕР С ЩИТОМ */
         .main-theater {
             position: relative;
             background: #000;
@@ -74,7 +146,7 @@
             border: none;
         }
 
-        /* 👻 НЕВИДИМЫЙ ЩИТ — БЛОКИРУЕТ ПАУЗУ И КЛИКИ */
+        /* НЕВИДИМЫЙ ЩИТ — БЛОКИРУЕТ ПАУЗУ И КЛИКИ */
         .shield {
             position: absolute;
             top: 0;
@@ -87,7 +159,7 @@
             background: transparent;
         }
 
-        /* ===== САЙДБАР ===== */
+        /* САЙДБАР */
         .side-dashboard {
             background: var(--panel-bg);
             backdrop-filter: blur(16px);
@@ -135,9 +207,15 @@
         }
 
         @keyframes live-glow {
-            0%   { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70%  { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+            0% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+            }
         }
 
         .meta-list {
@@ -204,15 +282,19 @@
 </head>
 <body>
 
+    <!-- =========================================================== -->
+    <!-- 3. ОСНОВНОЙ HTML                                             -->
+    <!-- =========================================================== -->
     <div class="cinema-grid">
-        <!-- ПЛЕЕР С ЩИТОМ -->
+
+        <!-- ЛЕВАЯ КОЛОНКА: ПЛЕЕР -->
         <div class="video-section">
             <div class="main-theater" id="playerContainer">
                 <div class="shield" id="shield"></div>
             </div>
         </div>
 
-        <!-- САЙДБАР -->
+        <!-- ПРАВАЯ КОЛОНКА: ИНФО + КНОПКИ -->
         <div class="side-dashboard">
             <div class="station-info">
                 <div class="badge-live">
@@ -235,18 +317,23 @@
         </div>
     </div>
 
-    <!-- ===== YOUTUBE API ===== -->
+    <!-- =========================================================== -->
+    <!-- 4. ПОДКЛЮЧЕНИЕ YOUTUBE API                                  -->
+    <!-- =========================================================== -->
     <script src="https://www.youtube.com/iframe_api">
     </script>
 
+    <!-- =========================================================== -->
+    <!-- 5. ОСНОВНОЙ СКРИПТ                                          -->
+    <!-- =========================================================== -->
     <script>
         // ============================================================
-        // 📋 ПЛЕЙЛИСТ
+        // 📋 ПЛЕЙЛИСТ — ДОБАВЛЯЙ ЛЮБЫЕ ID С ЮТУБА
         // ============================================================
         const playlist = [
-            { id: '1OXz7rPWsSY', title: 'Смешарики провожаем лето 2026' },
-            { id: 'SQSW6k0EGpg', title: 'Смешарики Грусные истории' },
-            { id: 'Vsz-ZRg56ok', title: 'Смешарики лучшие серии' }
+            { id: 'Lu0pj1L6mL8', title: 'Смешарики НАЧАЛО' },
+            { id: '1vBgKm9qhhM', title: 'Смешарики ДЕЖАВЮ' },
+            { id: 'gs-MZg77o6w', title: 'Смешарики СНИМАЮТ КИНО' }
         ];
 
         // ============================================================
@@ -318,7 +405,7 @@
                     controls: 1,
                     rel: 0,
                     mute: isMuted ? 1 : 0,
-                    start: Math.floor(savedTime) // важно!
+                    start: Math.floor(savedTime)
                 },
                 events: {
                     onStateChange: onPlayerStateChange,
@@ -357,7 +444,6 @@
                 createPlayer();
             }
 
-            // Сохраняем время при паузе (на случай, если юзер выйдет)
             if (event.data === YT.PlayerState.PAUSED) {
                 if (player && typeof player.getCurrentTime === 'function') {
                     saveCurrentState(player.getCurrentTime());
@@ -394,31 +480,7 @@
         });
 
         // ============================================================
-        // 🛡️ ЗАЩИТА ОТ F12 (РАБОТАЕТ ВСЕГДА)
-        // ============================================================
-        let f12blocked = false;
-
-        document.addEventListener('keydown', function(e) {
-            const isF12 = e.key === 'F12';
-            const isDevTools = (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i'));
-            const isViewSource = (e.ctrlKey && (e.key === 'U' || e.key === 'u'));
-
-            if (isF12 || isDevTools || isViewSource) {
-                e.preventDefault();
-                e.stopPropagation();
-                alert('🛡️ Инструменты разработчика отключены на этом сайте!');
-                return false;
-            }
-        }, true); // ← true перехватывает событие на этапе захвата
-
-        // Блокируем контекстное меню (правый клик)
-        document.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-            alert('🛡️ Правый клик отключён!');
-        });
-
-        // ============================================================
-        // 🧹 ЧИСТИМ localStorage ПРИ ВЫХОДЕ (если хочешь)
+        // 🧹 СОХРАНЕНИЕ ПРИ ВЫХОДЕ
         // ============================================================
         window.addEventListener('beforeunload', function() {
             if (player && typeof player.getCurrentTime === 'function') {
@@ -426,6 +488,8 @@
                 if (t > 0) saveCurrentState(t);
             }
         });
+
+        console.log('🎬 Ветер ТВ загружен!');
     </script>
 
 </body>
