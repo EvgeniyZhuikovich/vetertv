@@ -1,10 +1,17 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ветер ТВ — Прямой эфир</title>
     <style>
+        /* ===== GLOBAL ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         :root {
             --bg-main: #020617;
             --panel-bg: rgba(15, 23, 42, 0.45);
@@ -15,41 +22,40 @@
 
         body {
             background-color: var(--bg-main);
-            background-image: radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
-                              radial-gradient(circle at 20% 80%, rgba(14, 165, 233, 0.15) 0%, transparent 50%);
+            background-image:
+                radial-gradient(circle at 80% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 20% 80%, rgba(14, 165, 233, 0.15) 0%, transparent 50%);
             color: var(--text-main);
             font-family: system-ui, -apple-system, sans-serif;
-            margin: 0;
-            padding: 0;
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
+            padding: 20px;
             user-select: none;
             -webkit-user-select: none;
         }
 
-        /* Главная сетка в стиле Netflix/Twitch */
+        /* ===== CINEMA GRID ===== */
         .cinema-grid {
             display: grid;
             grid-template-columns: 1fr 340px;
             gap: 24px;
             width: 100%;
             max-width: 1150px;
-            padding: 30px;
-            box-sizing: border-box;
         }
 
         @media (max-width: 900px) {
-            .cinema-grid { grid-template-columns: 1fr; }
+            .cinema-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
-        /* Левая часть: Плеер */
+        /* ===== VIDEO SECTION ===== */
         .video-section {
             display: flex;
             flex-direction: column;
             gap: 16px;
-            position: relative;
         }
 
         .main-theater {
@@ -57,29 +63,20 @@
             background: #000;
             border-radius: 20px;
             border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 30px 60px -15px rgba(0,0,0,0.8), 0 0 50px var(--accent-glow);
-            aspect-ratio: 16/9;
+            box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.8), 0 0 50px var(--accent-glow);
+            aspect-ratio: 16 / 9;
             overflow: hidden;
             width: 100%;
         }
 
-        .main-theater iframe {
+        .main-theater iframe,
+        .main-theater #yt-iframe-placeholder {
             width: 100%;
             height: 100%;
             border: none;
         }
 
-        .player-shield {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 10;
-            cursor: default;
-        }
-
-        /* Правая часть: Премиум Панель */
+        /* ===== SIDE DASHBOARD ===== */
         .side-dashboard {
             background: var(--panel-bg);
             backdrop-filter: blur(16px);
@@ -90,14 +87,14 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
         }
 
         .station-info h1 {
             font-size: 28px;
             font-weight: 800;
             letter-spacing: 2px;
-            margin: 0 0 8px 0;
+            margin: 12px 0 0 0;
             background: linear-gradient(135deg, #fff 40%, var(--accent));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -127,8 +124,8 @@
         }
 
         @keyframes live-glow {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+            0%   { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70%  { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
             100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
 
@@ -147,14 +144,14 @@
             justify-content: space-between;
         }
 
-        .meta-list strong { color: #f1f5f9; }
+        .meta-list strong {
+            color: #f1f5f9;
+        }
 
         .action-container {
             display: flex;
             flex-direction: column;
             gap: 10px;
-            position: relative;
-            z-index: 20;
         }
 
         .btn-modern {
@@ -197,19 +194,20 @@
 <body>
 
     <div class="cinema-grid">
+        <!-- ЛЕВАЯ КОЛОНКА: ПЛЕЕР -->
         <div class="video-section">
             <div class="main-theater" id="playerContainer"></div>
-            <div class="player-shield"></div>
         </div>
 
+        <!-- ПРАВАЯ КОЛОНКА: ИНФО + КНОПКИ -->
         <div class="side-dashboard">
             <div class="station-info">
                 <div class="badge-live">
                     <div class="pulse-ring"></div>
                     Эфир
                 </div>
-                <h1 style="margin-top: 12px;">Ветер ТВ</h1>
-                
+                <h1>Ветер ТВ</h1>
+
                 <ul class="meta-list">
                     <li>Сейчас в эфире: <strong id="currentShowTitle">Загрузка...</strong></li>
                     <li>Качество: <strong>Ultra HD 4K</strong></li>
@@ -223,83 +221,120 @@
             </div>
         </div>
     </div>
-<script>
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && e.key === 'U')) {
-      e.preventDefault();
-      alert('Доступ к инструментам разработчика запрещён!');
-    }
-  });
-</script>
-    <!-- ПОДКЛЮЧАЕМ ОФИЦИАЛЬНЫЙ API ПЛЕЕРА YOUTUBE ДЛЯ КОНТРОЛЯ ОЧЕРЕДИ -->
-    <script src="https://youtube.com"></script>
+
+    <!-- ===== ПОДКЛЮЧАЕМ YOUTUBE IFRAME API ===== -->
+    <script src="https://www.youtube.com/iframe_api">
+    </script>
 
     <script>
-        const params = new URLSearchParams(window.location.search);
-        const isAdmin = params.get('owner') === 'true';
-
-        // ========================================================
-        // 📍 ТВОЙ БЕСКОНЕЧНЫЙ АВТОПЛЕЙЛИСТ (ДОБАВЛЯЙ ХОТЬ 10, ХОТЬ 100 СТРОК)
-        // ========================================================
+        // ============================================================
+        // 📋 ПЛЕЙЛИСТ — ДОБАВЛЯЙ ЛЮБЫЕ ID С ЮТУБА
+        // ============================================================
         const playlist = [
             { id: 'Lu0pj1L6mL8', title: 'Смешарики НАЧАЛО' },
-            { id: '1vBgKm9qhhM', title: 'Смешарики ДЕЖАВЮ '},
+            { id: '1vBgKm9qhhM', title: 'Смешарики ДЕЖАВЮ' },
             { id: 'gs-MZg77o6w', title: 'Смешарики СНИМАЮТ КИНО' }
-            // Сюда через запятую можешь дописывать новые строчки по аналогии!
         ];
 
+        // ============================================================
+        // 🧠 ПЕРЕМЕННЫЕ
+        // ============================================================
         let currentTrackIndex = 0;
         let isMuted = true;
-        let player;
+        let player = null;
+        let playerReady = false;
 
-        // API Ютуба автоматически вызовет эту функцию для сборки плеера
+        // ============================================================
+        // 🚀 СОЗДАНИЕ ПЛЕЕРА
+        // ============================================================
         function onYouTubeIframeAPIReady() {
-            updatePlayer();
+            playerReady = true;
+            createPlayer();
         }
 
-        function updatePlayer() {
-            try {
-                const currentVideo = playlist[currentTrackIndex];
-                document.getElementById('currentShowTitle').textContent = currentVideo.title;
+        function createPlayer() {
+            if (!playerReady) return;
 
-                const playerContainer = document.getElementById('playerContainer');
-                playerContainer.innerHTML = `<div id="yt-iframe-placeholder"></div>`;
+            const currentVideo = playlist[currentTrackIndex];
+            document.getElementById('currentShowTitle').textContent = currentVideo.title;
 
-                // Инициализируем плеер через официальный объект, чтобы ловить событие окончания видео
-                player = new YT.Player('yt-iframe-placeholder', {
-                    height: '100%',
-                    width: '100%',
-                    videoId: currentVideo.id,
-                    playerVars: {
-                        'autoplay': 1,
-                        'controls': 1,
-                        'rel': 0,
-                        'mute': isMuted ? 1 : 0
-                    },
-                    events: {
-                        'onStateChange': onPlayerStateChange
-                    }
-                });
-            } catch(e) { console.error(e); }
+            const container = document.getElementById('playerContainer');
+            container.innerHTML = '<div id="yt-iframe-placeholder"></div>';
+
+            player = new YT.Player('yt-iframe-placeholder', {
+                height: '100%',
+                width: '100%',
+                videoId: currentVideo.id,
+                playerVars: {
+                    autoplay: 1,
+                    controls: 1,
+                    rel: 0,
+                    mute: isMuted ? 1 : 0
+                },
+                events: {
+                    onStateChange: onPlayerStateChange
+                }
+            });
         }
 
-        // КРИТИЧЕСКАЯ ЛОГИКА: Переключение на следующее видео, когда текущее закончилось
+        // ============================================================
+        // 🔄 АВТОПЕРЕКЛЮЧЕНИЕ ПОСЛЕ ОКОНЧАНИЯ
+        // ============================================================
         function onPlayerStateChange(event) {
-            // YT.PlayerState.ENDED означает, что видео досмотрено до конца (0 секунд осталось)
             if (event.data === YT.PlayerState.ENDED) {
                 currentTrackIndex++;
-                // Если плейлист дошел до конца — запускаем его заново с самого первого видео
                 if (currentTrackIndex >= playlist.length) {
                     currentTrackIndex = 0;
                 }
-                updatePlayer();
+                createPlayer();
             }
         }
 
-        // Умная кнопка звука (без перезагрузки страницы)
-        document.getElementById('mute-btn').addEventListener('click', () => {
+        // ============================================================
+        // 🔊 КНОПКА ЗВУКА
+        // ============================================================
+        document.getElementById('mute-btn').addEventListener('click', function() {
             if (player && typeof player.mute === 'function') {
                 isMuted = !isMuted;
                 if (isMuted) {
                     player.mute();
-                    document.getElementById('mute-btn').textContent = "🔊 Включить звук";
+                    this.textContent = '🔊 Включить звук';
+                } else {
+                    player.unMute();
+                    this.textContent = '🔇 Выключить звук';
+                }
+            }
+        });
+
+        // ============================================================
+        // 📺 КНОПКА ПОЛНОГО ЭКРАНА
+        // ============================================================
+        document.getElementById('fs-btn').addEventListener('click', function() {
+            const container = document.getElementById('playerContainer');
+            if (container.requestFullscreen) {
+                container.requestFullscreen();
+            } else if (container.webkitRequestFullscreen) {
+                container.webkitRequestFullscreen();
+            }
+        });
+
+        // ============================================================
+        // 🛡️ ЗАЩИТА ОТ F12 (ИНСТРУМЕНТЫ РАЗРАБОТЧИКА)
+        // ============================================================
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'F12' ||
+                (e.ctrlKey && e.shiftKey && e.key === 'I') ||
+                (e.ctrlKey && e.key === 'U')) {
+                e.preventDefault();
+                alert('Доступ к инструментам разработчика запрещён!');
+            }
+        });
+
+        // ============================================================
+        // 📡 ОНЛАЙН (ЗАГЛУШКА — ДЛЯ ТЕСТА)
+        // ============================================================
+        document.getElementById('onlineCount').textContent = '0';
+    </script>
+
+</body>
+</html>
